@@ -24,7 +24,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Instalación de librerías
-# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13" nest_asyncio
+# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13" "langgraph-prebuilt==1.0.8" nest_asyncio
 
 # COMMAND ----------
 

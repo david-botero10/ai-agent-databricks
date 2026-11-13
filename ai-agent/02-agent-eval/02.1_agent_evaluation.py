@@ -28,7 +28,7 @@
 # COMMAND ----------
 
 # DBTITLE 1,Instalación de librerías
-# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13"
+# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13" "langgraph-prebuilt==1.0.8"
 
 # COMMAND ----------
 
@@ -133,7 +133,7 @@ def log_customer_support_agent_model(resources, request_example):
             model_config="agent_config.yaml",     # su configuración
             input_example={"input": [{"role": "user", "content": request_example}]},
             resources=resources,  # Recursos de Databricks (endpoints, funciones, VS...) para la autenticación automática al desplegar
-            extra_pip_requirements=["databricks-connect", f"mcp=={importlib.metadata.version('mcp')}"]  # misma versión de mcp que el entorno actual
+            extra_pip_requirements=["databricks-connect", "langgraph-prebuilt==1.0.8", f"mcp=={importlib.metadata.version('mcp')}"]  # misma versión de mcp que el entorno actual
         )
 logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), request_example)
 

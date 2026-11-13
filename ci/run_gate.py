@@ -27,6 +27,9 @@ DEPENDENCIES = [
     "databricks-langchain",
     "databricks-agents",
     "unitycatalog-langchain[databricks]",
+    "typing_extensions>=4.13",
+    # langgraph 1.0.10 is incompatible with langgraph-prebuilt 1.0.13 (ImportError: ExecutionInfo)
+    "langgraph-prebuilt==1.0.8",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
