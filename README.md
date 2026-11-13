@@ -27,7 +27,7 @@ Datos sintéticos: 1.000 clientes, 1.534 contratos y 14.730 registros de factura
 
 ## 2. Cambios respecto al demo original
 
-El demo responde sobre una **telecomunicaciones**. Este fork lo lleva a servicios públicos. Todo lo
+El demo original responde sobre una **empresa de telecomunicaciones**. Este fork lo lleva a servicios públicos. Todo lo
 que cambió:
 
 | Archivo | Cambio |

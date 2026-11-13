@@ -81,7 +81,7 @@ relevance_judge = RelevanceToQuery().register(name="relevance_to_query")
 
 from mlflow.genai.scorers import Guidelines
 
-# Pautas de exactitud adaptadas al contexto de esta demo (soporte telco)
+# Pautas de exactitud adaptadas al contexto de esta demo (soporte de servicios públicos)
 accuracy_guidelines = [
   """
   La respuesta cita correctamente toda la información factual de los datos proporcionados, según estas reglas:

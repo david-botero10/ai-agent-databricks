@@ -224,8 +224,8 @@ with gr.Blocks(theme=theme) as demo:
     gr.Examples(
         examples=[
             ["Dame la información de john21@example.net"],
-            ["¿Cómo reinicio mi router WIFI ADSL-R500?"],
-            ["Resume todas las suscripciones de john21@example.net"]
+            ["¿Qué significa el código de error 4001 de mi medidor ERR-MED-2024?"],
+            ["Resume los servicios contratados de john21@example.net"]
         ],
         inputs=[textbox]
     )

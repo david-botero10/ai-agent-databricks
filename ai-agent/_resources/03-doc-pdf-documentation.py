@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Generación de la documentación PDF (base de conocimiento)
 # MAGIC
-# MAGIC Genera manuales técnicos en PDF de equipos y servicios telco usando un LLM del propio workspace
+# MAGIC Genera manuales técnicos en PDF de equipos y servicios de agua, energía y gas usando un LLM del propio workspace
 # MAGIC y los guarda en el volumen `pdf_documentation`. Luego, el notebook `03.1-pdf-rag-tool` los parsea
 # MAGIC y los indexa en Vector Search.
 # MAGIC
@@ -39,7 +39,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 
 def get_documentation_entities():
-    """Lista de manuales a generar (equipos y servicios telco). Se mantienen en inglés porque
+    """Lista de manuales a generar (equipos y servicios de agua, energía y gas). Se mantienen en inglés porque
     el modelo de embeddings del índice (gte-large-en) está optimizado para inglés."""
 
     return [
@@ -133,7 +133,7 @@ def get_prioritized_entities(n):
 
 # COMMAND ----------
 
-SYSTEM_PROMPT = """You are an expert technical documentation writer for telecommunications equipment and services.
+SYSTEM_PROMPT = """You are an expert technical documentation writer for water, energy and gas utility equipment and services.
 Write in English, with a professional tone. Output plain text using this light markdown only:
 '# ' for the document title, '## ' for sections, '### ' for sub-sections, '- ' for bullets and '1. ' for numbered steps.
 Do not use tables, code fences, bold markers or HTML."""

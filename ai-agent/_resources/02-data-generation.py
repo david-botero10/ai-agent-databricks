@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Generación de datos sintéticos de una empresa de telecomunicaciones (telco)
+# MAGIC # Generación de datos sintéticos de una empresa de servicios públicos (agua, energía y gas)
 # MAGIC Genera clientes, suscripciones y facturación con la librería Faker y los guarda como parquet en el volumen.
 # MAGIC
 # MAGIC Este notebook lo llama automáticamente `01-setup` cuando no es posible descargar los datos (por ejemplo, en Free Edition).
@@ -22,7 +22,7 @@ spark.sql(f'use schema {dbName}')
 # COMMAND ----------
 
 """
-Generador de datos telco
+Generador de datos de servicios públicos
 Genera datos realistas de clientes, suscripciones e información de facturación.
 """
 
@@ -34,8 +34,8 @@ import pandas as pd
 from faker import Faker
 
 
-class TelcoDataGenerator:
-    """Generador de datos telco: clientes, suscripciones y facturación."""
+class UtilityDataGenerator:
+    """Generador de datos de servicios públicos: clientes, suscripciones y facturación."""
     
     def __init__(self, seed: int = 42):
         """Inicializa el generador con una semilla para que los datos sean reproducibles."""
@@ -383,9 +383,9 @@ spark.sql(f'CREATE VOLUME IF NOT EXISTS {catalog}.{schema}.{volume_name}')
 # COMMAND ----------
 
 # Proceso principal: genera todos los datos
-print("Generando datos telco...")
+print("Generando datos de servicios públicos...")
 
-generator = TelcoDataGenerator(seed=42)
+generator = UtilityDataGenerator(seed=42)
 
 # Generamos los datos (las suscripciones dependen de los clientes y la facturación de las suscripciones)
 print("Generando clientes...")
