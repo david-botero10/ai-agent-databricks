@@ -45,26 +45,15 @@ volume_folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 # Carpetas que necesita la demo dentro del volumen
 tabular_folders = ["customers", "subscriptions", "billing"]
 
-def try_download(folder):
-    """Intenta descargar una carpeta del repositorio dbdemos-dataset. Devuelve True si quedó con archivos."""
-    if not DBDemos.is_folder_empty(f"{volume_folder}/{folder}"):
-        return True  # ya existen datos: no hay que descargar nada
-    try:
-        DBDemos.download_file_from_git(f"{volume_folder}/{folder}", "databricks-demos", "dbdemos-dataset", f"/llm/ai-agent/{folder}")
-    except Exception as e:
-        print(f"No se pudo descargar '{folder}': {str(e)[:300]}")
-    return not DBDemos.is_folder_empty(f"{volume_folder}/{folder}")
+# Esta versión del proyecto usa un dominio propio (servicios públicos: agua, energía y gas).
+# Por eso los datos y los manuales se generan SIEMPRE localmente: si se descargaran del
+# repositorio de dbdemos quedarían los datos y los PDFs del caso de telecomunicaciones original.
+print("Generando los datos tabulares localmente (puede tardar 1-2 minutos)...")
+# Ruta relativa al notebook principal (todos los notebooks principales están un nivel por debajo de la raíz)
+dbutils.notebook.run("../_resources/02-data-generation", 1800)
 
-# 1) Datos tabulares: si falta alguna carpeta, generamos las tres con Faker
-if not all([try_download(f) for f in tabular_folders]):
-    print("Generando los datos tabulares localmente (puede tardar 1-2 minutos)...")
-    # Ruta relativa al notebook principal (todos los notebooks principales están un nivel por debajo de la raíz)
-    dbutils.notebook.run("../_resources/02-data-generation", 1800)
-
-# 2) Documentación PDF: si no se pudo descargar, la generamos con el LLM del workspace
-if not try_download("pdf_documentation"):
-    print("Generando la documentación PDF con el LLM del workspace (puede tardar varios minutos)...")
-    dbutils.notebook.run("../_resources/03-doc-pdf-documentation", 3600)
+print("Generando la documentación PDF con el LLM del workspace (puede tardar varios minutos)...")
+dbutils.notebook.run("../_resources/03-doc-pdf-documentation", 3600)
 
 print("Datos disponibles en", volume_folder)
 

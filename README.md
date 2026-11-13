@@ -1,70 +1,140 @@
-# Agente de IA con Databricks y MLflow 3 — versión en español para Free Edition
+# Asistente de Servicios Públicos con Databricks y MLflow 3
 
-Traducción al español, con código comentado, de la demo **`ai-agent`** de [dbdemos](https://github.com/databricks-demos/dbdemos), adaptada para ejecutarse en **Databricks Free Edition (cómputo serverless)**.
+Implementación del **desafío de GenAIOps** sobre el stack de Databricks: un agente RAG para una
+empresa ficticia de servicios públicos (**ServiCiudad**: agua, energía y gas), construido con
+LangGraph, registrado en MLflow 3 y evaluado con jueces LLM.
 
-Construiremos un agente de atención al cliente para una empresa de telecomunicaciones que:
+> Este repositorio es un **fork** de [`darkanita/ai-agent-databricks`](https://github.com/darkanita/ai-agent-databricks),
+> la adaptación a Databricks Free Edition de la demo `ai-agent` de dbdemos.
+>
+> El desafío original (`DESAFIO.md`) está escrito para el repo de GenAIOps con LangChain + FAISS +
+> Streamlit. El enunciado permite explícitamente hacerlo "en Databricks o como lo estamos mostrando",
+> así que esta entrega toma esa primera opción: **el mismo desafío, implementado sobre Databricks**.
 
-1. Usa **funciones de Unity Catalog** (SQL y Python) como herramientas.
-2. Se construye con **LangGraph** y se registra en **MLflow 3** como `ResponsesAgent`.
-3. Se **evalúa** con jueces LLM de MLflow (`mlflow.genai.evaluate`) y se mejora con un mejor *system prompt*.
-4. Incorpora una **base de conocimiento (RAG)** a partir de manuales PDF con `ai_parse_document` y **Vector Search**.
-5. Se despliega como **endpoint de Model Serving** y como **chatbot (Gradio) en Databricks Apps**, con captura de feedback en MLflow.
-6. Se **monitorea en producción** con jueces registrados en MLflow.
-7. Usa herramientas de un **servidor MCP** gestionado por Databricks.
+---
 
-## Estructura
+## 1. Caso de uso
+
+ServiCiudad atiende clientes de **energía, agua y gas**. El asistente responde dos tipos de pregunta:
+
+1. **Datos del cliente** — contratos, facturación, estado de cuenta (funciones SQL en Unity Catalog).
+2. **Documentación técnica y de políticas** — medidores, códigos de error, tarifas, reconexiones,
+   PQR y emergencias (RAG sobre 8 manuales PDF indexados en Vector Search).
+
+Datos sintéticos: 1.000 clientes, 1.534 contratos y 14.730 registros de facturación.
+
+---
+
+## 2. Cambios respecto al demo original
+
+El demo responde sobre una **telecomunicaciones**. Este fork lo lleva a servicios públicos. Todo lo
+que cambió:
+
+| Archivo | Cambio |
+|---|---|
+| `ai-agent/config.py` | `MODEL_NAME = asistente_servicios_publicos` |
+| `ai-agent/_resources/02-data-generation.py` | Tipos de servicio `Energia` / `Agua` / `Gas` y sus tarifas base |
+| `ai-agent/_resources/03-doc-pdf-documentation.py` | Los 8 manuales: medidor inteligente, códigos de error, PQR, tarifas residenciales, reconexión, prepago, acometidas y emergencias. Se agregó al prompt la restricción explícita de no hablar de telecomunicaciones |
+| `ai-agent/_resources/01-setup.py` | Los datos y PDFs **siempre se generan localmente**; se eliminó la descarga del repositorio de dbdemos, que traía el corpus de telecomunicaciones |
+| `ai-agent/_resources/04-eval-dataset-generation.py` | Dataset curado de **15 preguntas** en 4 tipos, con respuesta verificada contra los PDFs |
+| `ai-agent/02-agent-eval/02.1_agent_evaluation.py` | System prompts de ServiCiudad |
+| `ai-agent/03-knowledge-base-rag/03.1-pdf-rag-tool.py` | Prioridad de documentos, descripción del retriever y preguntas de ejemplo |
+| `ai-agent/04-deploy-app/chatbot_app/main.py` | Título y textos de la app |
+| `ai-agent/10-evaluadores-propios.py` | **Nuevo**: `@scorer` de código, juez `make_judge` y `Guidelines` del dominio |
+| `ai-agent/11-acuerdo-humano.py` | **Nuevo**: etiquetado humano y acuerdo juez–humano |
+
+Verificación de que no quedan restos del dominio anterior:
+
+```bash
+grep -ri "telecom\|router\|fiber\|adsl\|broadband" ai-agent/ --include="*.py" | grep -v "_resources/03-doc"
+```
+
+---
+
+## 3. Cómo ejecutar
+
+### Requisitos
+
+- Databricks **Free Edition** (solo cómputo serverless)
+- Versión de entorno **2 o superior** en el panel *Environment* de cada notebook
+- Catálogo `workspace` (el de Free Edition)
+
+### Orden
+
+```
+00 · ai-agent/config.py                     configuración (catálogo, esquema, modelos)
+01 · ai-agent/01-create-tools/…             datos, PDFs y funciones de Unity Catalog
+02 · ai-agent/02-agent-eval/02.1_…          agente, evaluación y despliegue del endpoint
+03 · ai-agent/03-knowledge-base-rag/03.1_…  base de conocimiento con Vector Search
+04 · ai-agent/04-deploy-app/04-…            chatbot en Databricks Apps
+05 · ai-agent/05-production-monitoring/…    monitoreo con jueces registrados
+10 · ai-agent/10-evaluadores-propios.py     evaluadores propios del dominio
+11 · ai-agent/11-acuerdo-humano.py          acuerdo juez–humano
+```
+
+Los notebooks `06` y `07` (dashboard de negocio y MCP) son opcionales.
+
+### Automatización
+
+Los notebooks se pueden ejecutar por API con un job serverless:
+
+```python
+w.jobs.submit(
+    tasks=[jobs.SubmitTask(
+        task_key="nb",
+        notebook_task=jobs.NotebookTask(notebook_path="<ruta del notebook>"),
+        environment_key="Default",
+    )],
+    environments=[jobs.JobEnvironment(
+        environment_key="Default",
+        spec=compute.Environment(client="2"),
+    )],
+)
+```
+
+---
+
+## 4. Mapeo a la rúbrica del desafío
+
+| Parte | Puntos | Dónde está | Estado |
+|---|---|---|---|
+| 1 · Dominio | 10 | `config.py`, `_resources/02`, `_resources/03`, prompts | ✅ |
+| 2 · Dataset | 15 | `_resources/04-eval-dataset-generation.py` | ✅ |
+| 3 · Experimentos y diagnóstico | 20 | `02.1`, `03.1`, `docs/experimentos.md` | ⏳ |
+| 4 · Evaluadores propios | 20 | `10-evaluadores-propios.py` | ⏳ |
+| 5 · Confianza en el juez | 15 | `11-acuerdo-humano.py` | ⏳ |
+| 6 · Producción | 10 | alias `model-to-deploy`, quality gate, CI | ⏳ |
+| 7 · Informe | 10 | [`INFORME.md`](INFORME.md) | ⏳ |
+
+---
+
+## 5. Estructura
 
 ```
 ai-agent/
-├── config.py                                  # Catálogo, esquema, modelos y opciones (edita aquí)
-├── 01-ai-agent-introduction.py                # Introducción y mapa de la demo
+├── config.py
 ├── 01-create-tools/01_create_first_billing_agent.py
-├── 02-agent-eval/02.1_agent_evaluation.py     # Agente, evaluación y despliegue
-├── 02-agent-eval/agent.py                     # Código del agente (LangGraph + ResponsesAgent)
-├── 03-knowledge-base-rag/03.1-pdf-rag-tool.py # RAG con PDFs y Vector Search
-├── 04-deploy-app/04-Deploy-Frontend-Lakehouse-App.py
-├── 04-deploy-app/chatbot_app/                 # App Gradio (main.py, app.yaml, requirements.txt)
-├── 05-production-monitoring/05.production-monitoring.py
-├── 06-improving-business-kpis/06-business-dashboard.py
-├── 07-adding-mcp/07-agent_mcp.py
-└── _resources/                                # Setup, generación de datos, PDFs y dataset de evaluación
+├── 02-agent-eval/
+│   ├── 02.1_agent_evaluation.py
+│   └── agent.py
+├── 03-knowledge-base-rag/03.1-pdf-rag-tool.py
+├── 04-deploy-app/
+├── 05-production-monitoring/
+├── 10-evaluadores-propios.py
+├── 11-acuerdo-humano.py
+└── _resources/
+docs/
+├── experimentos.md          # tabla de configuraciones y diagnóstico de fallos
+└── capturas/                # evidencia visual del informe
+tests/
+└── eval_dataset.json        # copia del dataset para revisión y CI
 ```
 
-## Cómo usarlo
+---
 
-1. Crea una cuenta gratuita en [Databricks Free Edition](https://www.databricks.com/learn/free-edition).
-2. Importa el repositorio en tu workspace: **Workspace → Create → Git folder** y pega la URL de este repositorio.
-   (También puedes descargar el ZIP e importarlo con **Import**.)
-3. Abre cada notebook, conéctalo a **Serverless** y en el panel **Environment** elige la versión de entorno **2 o superior**.
-4. Revisa `ai-agent/config.py` y ejecuta los notebooks **en orden**: 01 → 02 → 03 → 04 → 05 → (06, 07 opcionales).
+## 6. Créditos
 
-> La primera ejecución del notebook 01 puede tardar varios minutos si hay que generar los datos y los manuales PDF.
-
-## Adaptaciones para Free Edition
-
-| Tema | Original | Esta versión |
-|---|---|---|
-| Catálogo | `main` | `workspace` (el catálogo por defecto en Free Edition) |
-| Datos | Descarga desde GitHub/S3 | Intenta descargar; si el acceso a internet está restringido, los **genera localmente** (Faker) |
-| PDFs | Generados con una URL de otro workspace + WeasyPrint | Generados con el LLM de **tu** workspace + `fpdf2` (100% Python); 8 manuales para cuidar la cuota |
-| Modelos | Fijos | Se elige automáticamente el primer LLM / modelo de embeddings **disponible** |
-| Vector Search | Crea `dbdemos_vs_endpoint` | Si ya tienes un endpoint (máximo 1 en Free Edition), **lo reutiliza** |
-| `ai_parse_document` | Obligatorio | Si no está disponible, extrae el texto con `pypdf` |
-| Datos sintéticos de evaluación | `generate_evals_df` | Si no está disponible, usa preguntas escritas a mano |
-| Despliegue del endpoint | Obligatorio | Opcional (`DEPLOY_AGENT_ENDPOINT` en `config`); si falla por límites, el notebook continúa |
-| Nombres de herramientas | `get_customer_billing_and_subscriptions` | `get_billing_and_subscriptions`: con el catálogo `workspace` el nombre completo `catalogo__esquema__funcion` superaba los 64 caracteres que aceptan los LLM y la herramienta fallaba |
-| Idioma | Inglés | Notebooks, prompts, preguntas de evaluación y app en **español**. Los manuales PDF siguen en inglés (el modelo `gte-large-en` es para inglés) y el retriever pide la consulta en inglés |
-
-### Límites de Free Edition a tener en cuenta
-
-- Solo cómputo serverless; acceso a internet restringido a dominios de confianza.
-- 1 endpoint de Vector Search, límite de endpoints de Model Serving activos.
-- Hasta 3 Databricks Apps; cada app se detiene a las 24 h (se puede reiniciar).
-- Agent Bricks no está disponible.
-- Si superas la cuota diaria, el cómputo se detiene hasta que se restablezca.
-
-El notebook **04** necesita el endpoint del agente desplegado en el notebook 02 o 03.
-
-## Créditos y licencia
-
-Basado en la demo `ai-agent` de [databricks-demos/dbdemos](https://github.com/databricks-demos/dbdemos) (Copyright Databricks, Inc.). Consulta `ai-agent/_resources/LICENSE.py` para los términos de la licencia original.
+Basado en la demo `ai-agent` de [`databricks-demos/dbdemos`](https://github.com/databricks-demos/dbdemos)
+(Copyright Databricks, Inc.) a través de la adaptación en español para Free Edition de
+[`darkanita/ai-agent-databricks`](https://github.com/darkanita/ai-agent-databricks).
+Ver `ai-agent/_resources/LICENSE.py`.

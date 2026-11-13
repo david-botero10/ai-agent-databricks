@@ -76,6 +76,14 @@ model_config = mlflow.models.ModelConfig(development_config='agent_config.yaml')
 # COMMAND ----------
 
 # Al importar agent.py se crea el objeto AGENT con la configuración anterior
+import os
+import sys
+
+# En este workspace el notebook corre en una carpeta del workspace, no en un Repo:
+# agregamos la carpeta actual al path para poder importar agent.py como módulo.
+if os.getcwd() not in sys.path:
+    sys.path.insert(0, os.getcwd())
+
 from agent import AGENT
 
 # Formato de solicitud de la Responses API
@@ -204,7 +212,7 @@ except Exception as e:
   if 'does not exist' in str(e) or 'not found' in str(e).lower():
     # Si no existe, lo creamos y le agregamos los ejemplos
     eval_dataset = mlflow.genai.datasets.create_dataset(eval_dataset_table_name)
-    eval_dataset.merge_records(eval_example)
+    eval_dataset.merge_records(eval_example.toPandas())
     print("Registros agregados al dataset de evaluación.")
   else:
     raise e
@@ -284,8 +292,9 @@ try:
     config = yaml.safe_load(open("agent_config.yaml"))
     config["config_version_name"] = "better_prompt"
     config["system_prompt"] = (
-        "Eres un asistente de una empresa de telecomunicaciones. Llama a la herramienta adecuada para ayudar al usuario con facturación, soporte o información de su cuenta. "
-        "Los pedidos o compras de un cliente corresponden a sus suscripciones y facturación. "
+        "Eres un asistente de ServiCiudad, una empresa de servicios públicos de agua, energía y gas. "
+        "Llama a la herramienta adecuada para ayudar al usuario con su cuenta, sus contratos de servicio, facturación, reconexiones o información técnica de su medidor. "
+        "Los pedidos o compras de un cliente corresponden a sus servicios contratados y su facturación. "
         "NO menciones ninguna herramienta interna ni los pasos de tu razonamiento en la respuesta final. No digas 'según los registros' ni insinúes que estás buscando información. "
         "Responde siempre en español."
     )

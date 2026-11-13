@@ -25,7 +25,7 @@ volume_name = "raw_data"
 VECTOR_SEARCH_ENDPOINT_NAME = "dbdemos_vs_endpoint"
 
 # Nombre del modelo registrado en Unity Catalog y del endpoint de serving del agente
-MODEL_NAME = "dbdemos_ai_agent_demo"
+MODEL_NAME = "asistente_servicios_publicos"
 ENDPOINT_NAME = f'{MODEL_NAME}_{catalog}_{db}'[:60]
 
 # Si es False, se omite el despliegue del agente como endpoint de Model Serving

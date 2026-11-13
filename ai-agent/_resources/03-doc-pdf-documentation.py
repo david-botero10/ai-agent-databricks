@@ -43,252 +43,86 @@ def get_documentation_entities():
     el modelo de embeddings del índice (gte-large-en) está optimizado para inglés."""
 
     return [
-        # Manuales de equipos (hardware)
+        # Equipos de medición (hardware)
         {
-            "title": "Fiber Optic Modem User Manual",
+            "title": "Smart Electricity Meter User Manual",
             "category": "Hardware",
-            "model": "FOM-2000X",
-            "description": "High-speed fiber optic modem for residential and business use"
+            "model": "MED-ENERGIA-2024",
+            "description": "Residential smart electricity meter: display, readings, reset and pairing procedures"
         },
         {
-            "title": "ADSL Router Troubleshooting Guide",
+            "title": "Water Meter Installation and Reading Guide",
             "category": "Hardware",
-            "model": "ADSL-R500",
-            "description": "Comprehensive troubleshooting for ADSL router connectivity issues"
+            "model": "MED-AGUA-2024",
+            "description": "Water meter installation, reading, leak detection and maintenance"
         },
         {
-            "title": "Mobile Hotspot Device Manual",
+            "title": "Prepaid Meter User Manual",
             "category": "Hardware",
-            "model": "MHD-4G-Pro",
-            "description": "4G/5G mobile hotspot device for on-the-go internet access"
+            "model": "PREPAGO-2024",
+            "description": "Prepaid energy meter: recharge, balance display, low-balance alerts and disconnection behavior"
         },
-        {
-            "title": "WiFi Extender Setup Guide",
-            "category": "Hardware",
-            "model": "WIFI-EXT-300",
-            "description": "WiFi range extender installation and configuration manual"
-        },
-        {
-            "title": "VoIP Phone System Manual",
-            "category": "Hardware",
-            "model": "VOIP-PRO-100",
-            "description": "Voice over IP phone system setup and configuration"
-        },
-        {
-            "title": "Cable Modem Troubleshooting",
-            "category": "Hardware",
-            "model": "CABLE-MODEM-500",
-            "description": "Cable modem connectivity and performance troubleshooting"
-        },
-        
+
         # Documentación técnica
         {
-            "title": "Internet Service Error Codes Reference",
+            "title": "Meter Error Codes Reference",
             "category": "Technical",
-            "model": "ERR-REF-2024",
-            "description": "Complete reference guide for all internet service error codes"
+            "model": "ERR-MED-2024",
+            "description": "Complete reference of meter display error codes, symptoms, causes and resolution steps"
         },
         {
-            "title": "Network Security Configuration Manual",
-            "category": "Security",
-            "model": "SEC-NET-2024",
-            "description": "Network security setup and configuration for telco equipment"
+            "title": "Service Connection and Metering Regulation",
+            "category": "Technical",
+            "model": "ACOMETIDA-2024",
+            "description": "New service connections, technical requirements, inspection and metering rules"
+        },
+
+        # Tarifas y facturación
+        {
+            "title": "Residential Tariffs and Subsidies Guide",
+            "category": "Billing",
+            "model": "TARIFA-RES-2024",
+            "description": "Residential tariff structure, subsidies, consumption brackets and billing cycle"
         },
         {
-            "title": "Router Firmware Update Guide",
-            "category": "Maintenance",
-            "model": "FIRMWARE-UPDATE-001",
-            "description": "Safe router firmware update procedures and troubleshooting"
+            "title": "Commercial and Industrial Tariffs Guide",
+            "category": "Billing",
+            "model": "TARIFA-COM-2024",
+            "description": "Commercial and industrial tariff schemes, demand charges and contract conditions"
+        },
+
+        # Políticas de servicio
+        {
+            "title": "Reconnection and Suspension Policy",
+            "category": "Policy",
+            "model": "RECONEXION-2024",
+            "description": "Suspension for non-payment, reconnection steps, fees and payment agreements"
         },
         {
-            "title": "Network Monitoring Tools Manual",
-            "category": "Monitoring",
-            "model": "NET-MON-2024",
-            "description": "Network monitoring and diagnostic tools usage guide"
-        },
-        
-        # Instalación y configuración
-        {
-            "title": "Fiber Installation Guide",
-            "category": "Installation",
-            "model": "FIBER-INST-001",
-            "description": "Step-by-step fiber optic installation and setup guide"
+            "title": "Emergency and Outage Response Protocol",
+            "category": "Operations",
+            "model": "EMERG-2024",
+            "description": "Outage reporting, emergency response times, restoration priorities and compensation"
         },
         {
-            "title": "Home Network Configuration Manual",
-            "category": "Configuration",
-            "model": "HOME-NET-001",
-            "description": "Complete home network setup and configuration guide"
-        },
-        {
-            "title": "Smart Home Network Setup",
-            "category": "Configuration",
-            "model": "SMART-HOME-NET",
-            "description": "Smart home device network integration and setup"
-        },
-        
-        # Servicios empresariales
-        {
-            "title": "Business Internet Setup Guide",
-            "category": "Business",
-            "model": "BIZ-INT-2024",
-            "description": "Business-grade internet service setup and management"
-        },
-        {
-            "title": "Internet Backup Solutions Guide",
-            "category": "Business",
-            "model": "BACKUP-INT-001",
-            "description": "Internet backup solutions for business continuity"
-        },
-        {
-            "title": "Internet Service Level Agreement Guide",
-            "category": "Business",
-            "model": "SLA-GUIDE-2024",
-            "description": "Understanding and monitoring internet service level agreements"
-        },
-        
-        # Diagnóstico y optimización
-        {
-            "title": "Internet Speed Test Guide",
-            "category": "Diagnostics",
-            "model": "SPEED-TEST-2024",
-            "description": "How to test and optimize internet connection speeds"
-        },
-        {
-            "title": "Network Performance Optimization",
-            "category": "Optimization",
-            "model": "PERF-OPT-2024",
-            "description": "Network performance optimization techniques and best practices"
-        },
-        {
-            "title": "Emergency Internet Connectivity Guide",
-            "category": "Emergency",
-            "model": "EMERG-INT-001",
-            "description": "Emergency internet connectivity solutions and procedures"
-        },
-        {
-            "title": "Internet Security Best Practices",
-            "category": "Security",
-            "model": "SEC-BEST-2024",
-            "description": "Internet security best practices for home and business users"
-        },
-        
-        # Documentación de atención y soporte al cliente
-        {
-            "title": "Customer Refund Policy Guide",
+            "title": "Customer Requests, Complaints and Claims Procedure",
             "category": "Customer Service",
-            "model": "REFUND-POLICY-2024",
-            "description": "Complete guide to customer refund policies, procedures, and eligibility criteria"
+            "model": "PQR-2024",
+            "description": "Customer request, complaint and claim (PQR) procedure, response deadlines and escalation levels"
         },
         {
-            "title": "Equipment Return Policy Manual",
+            "title": "Energy Saving and Efficient Use Guide",
             "category": "Customer Service",
-            "model": "RETURN-POLICY-2024",
-            "description": "Equipment return procedures, restocking fees, and return authorization process"
-        },
-        {
-            "title": "Service Cancellation Procedures",
-            "category": "Customer Service",
-            "model": "CANCEL-PROC-2024",
-            "description": "Step-by-step service cancellation procedures and early termination fees"
-        },
-        {
-            "title": "Customer Complaint Resolution Guide",
-            "category": "Customer Service",
-            "model": "COMPLAINT-RES-2024",
-            "description": "Customer complaint handling procedures and escalation protocols"
-        },
-        {
-            "title": "Service Upgrade and Downgrade Guide",
-            "category": "Customer Service",
-            "model": "SERVICE-CHANGE-2024",
-            "description": "Service plan changes, upgrade procedures, and proration policies"
-        },
-        {
-            "title": "Payment Plan and Billing Support Guide",
-            "category": "Customer Service",
-            "model": "BILLING-SUPPORT-2024",
-            "description": "Payment plan options, billing dispute resolution, and payment methods"
-        },
-        {
-            "title": "Customer Loyalty Program Guide",
-            "category": "Customer Service",
-            "model": "LOYALTY-PROG-2024",
-            "description": "Loyalty program benefits, tier requirements, and reward redemption"
-        },
-        {
-            "title": "Technical Support Escalation Procedures",
-            "category": "Customer Service",
-            "model": "ESCALATION-PROC-2024",
-            "description": "When and how to escalate technical issues to higher support tiers"
-        },
-        {
-            "title": "Customer Account Management Guide",
-            "category": "Customer Service",
-            "model": "ACCOUNT-MGMT-2024",
-            "description": "Account changes, authorized users, and account security procedures"
-        },
-        {
-            "title": "Service Outage Communication Protocol",
-            "category": "Customer Service",
-            "model": "OUTAGE-COMM-2024",
-            "description": "How to communicate service outages and estimated restoration times"
-        },
-        {
-            "title": "Customer Satisfaction Survey Procedures",
-            "category": "Customer Service",
-            "model": "SAT-SURVEY-2024",
-            "description": "Customer satisfaction survey administration and follow-up procedures"
-        },
-        {
-            "title": "Service Credit and Compensation Guide",
-            "category": "Customer Service",
-            "model": "SERVICE-CREDIT-2024",
-            "description": "When and how to offer service credits for service issues"
-        },
-        {
-            "title": "Customer Retention Strategies Guide",
-            "category": "Customer Service",
-            "model": "RETENTION-STRAT-2024",
-            "description": "Customer retention strategies, win-back offers, and loyalty incentives"
-        },
-        {
-            "title": "Multi-Language Support Procedures",
-            "category": "Customer Service",
-            "model": "MULTI-LANG-2024",
-            "description": "Supporting customers in multiple languages and translation services"
-        },
-        {
-            "title": "Accessibility Support Guidelines",
-            "category": "Customer Service",
-            "model": "ACCESSIBILITY-2024",
-            "description": "Supporting customers with disabilities and accessibility requirements"
-        },
-        {
-            "title": "Customer Privacy and Data Protection Guide",
-            "category": "Customer Service",
-            "model": "PRIVACY-PROT-2024",
-            "description": "Customer data protection, privacy policies, and GDPR compliance"
-        },
-        {
-            "title": "Social Media Customer Support Guide",
-            "category": "Customer Service",
-            "model": "SOCIAL-SUPPORT-2024",
-            "description": "Handling customer inquiries and complaints on social media platforms"
-        },
-        {
-            "title": "Customer Education and Training Materials",
-            "category": "Customer Service",
-            "model": "CUST-EDU-2024",
-            "description": "Educational materials and training resources for customers"
+            "model": "AHORRO-2024",
+            "description": "Practical energy saving recommendations, consumption benchmarks and efficiency programs"
         }
     ]
 
 
 
 # Manuales que se generan primero porque se usan en los ejemplos de los notebooks
-PRIORITY_MODELS = ["ADSL-R500", "ERR-REF-2024", "SAT-SURVEY-2024", "FIRMWARE-UPDATE-001",
-                   "RETURN-POLICY-2024", "REFUND-POLICY-2024", "FOM-2000X", "WIFI-EXT-300"]
+PRIORITY_MODELS = ["MED-ENERGIA-2024", "ERR-MED-2024", "PQR-2024", "TARIFA-RES-2024",
+                   "RECONEXION-2024", "PREPAGO-2024", "ACOMETIDA-2024", "EMERG-2024"]
 
 
 def get_prioritized_entities(n):
@@ -313,6 +147,10 @@ TITLE: {entity['title']}
 CATEGORY: {entity['category']}
 MODEL: {entity['model']}
 DESCRIPTION: {entity['description']}
+
+The company is "ServiCiudad", a public utility that provides ELECTRICITY, WATER and GAS to
+residential and business customers. It is NOT a telecommunications company: never mention
+telecom, internet service providers, routers, fiber or mobile plans.
 
 The manual will be used as the only source of a RAG customer-support assistant, so be explicit and self-contained.
 Mention the model name ({entity['model']}) in every section. Include, when applicable:

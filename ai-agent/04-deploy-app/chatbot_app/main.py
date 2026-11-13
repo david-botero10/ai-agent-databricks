@@ -140,11 +140,11 @@ theme = gr.themes.Soft(
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown(
         """
-        # Demo de agente de IA en Databricks - Asistente de datos de clientes
+        # Asistente de Servicios Públicos - ServiCiudad
 
-        Este agente de IA te ayuda a consultar datos de clientes y obtener información útil.  
-        Usa herramientas para acceder a las bases de datos y puede responder preguntas sobre clientes, sus segmentos, facturación y documentación técnica de productos.  
-        Es un ejemplo de demostración de las capacidades de los agentes de IA con Databricks.
+        Este agente ayuda a los clientes de ServiCiudad con sus servicios de agua, energía y gas:
+        consulta de cuenta, contratos, facturación, códigos de error del medidor y políticas de la empresa.
+        Combina datos de cliente en Unity Catalog con una base de conocimiento de manuales técnicos.
         """
     )
 

@@ -89,11 +89,11 @@ except Exception as e:
 
 # Orden de prioridad: primero los manuales usados en los ejemplos de la demo
 priority_order = """CASE
-    WHEN path ILIKE '%adsl_r500%' THEN 0
-    WHEN path ILIKE '%err_ref%' THEN 1
-    WHEN path ILIKE '%sat_survey%' THEN 2
-    WHEN path ILIKE '%firmware%' THEN 3
-    WHEN path ILIKE '%return_policy%' THEN 4
+    WHEN path ILIKE '%med_energia%' THEN 0
+    WHEN path ILIKE '%err_med%' THEN 1
+    WHEN path ILIKE '%pqr%' THEN 2
+    WHEN path ILIKE '%tarifa_res%' THEN 3
+    WHEN path ILIKE '%reconexion%' THEN 4
     ELSE 9 END"""
 
 try:
@@ -129,7 +129,7 @@ except Exception as e:
     import pandas as pd
     from pypdf import PdfReader
 
-    priority = ["adsl_r500", "err_ref", "sat_survey", "firmware", "return_policy"]
+    priority = ["med_energia", "err_med", "pqr", "tarifa_res", "reconexion"]
     def rank(p):
         return next((i for i, k in enumerate(priority) if k in p.lower()), 9), p
 
@@ -254,7 +254,7 @@ print(f"El índice {vs_index_fullname} sobre la tabla {source_table_fullname} es
 
 # DBTITLE 1,Búsqueda por similitud
 # La documentación está en inglés, por eso la consulta de prueba se hace en inglés
-question = "My wifi router gives me error 01, what should I do?"
+question = "My smart meter shows error E-05, what should I do?"
 
 results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(
   query_text=question,
@@ -293,7 +293,7 @@ try:
         "num_results": 1,
         # La descripción le indica al LLM cuándo usar la herramienta. Como los documentos están en inglés,
         # le pedimos que escriba la consulta (query) en inglés para que la búsqueda vectorial funcione mejor.
-        "description": "Recupera documentación interna sobre nuestros productos, infraestructura, routers y otros, incluyendo funcionalidades, uso y solución de problemas. Usa esta herramienta para cualquier pregunta sobre documentación de productos o problemas con productos. IMPORTANTE: escribe siempre la consulta (query) en inglés, porque la documentación está en inglés."
+        "description": "Recupera documentación interna sobre nuestros servicios públicos (energía, agua y gas): medidores, tarifas, facturación, reconexiones, emergencias y trámites. Usa esta herramienta para cualquier pregunta sobre documentación, procedimientos o problemas con el servicio. IMPORTANTE: escribe siempre la consulta (query) en inglés, porque la documentación está en inglés."
     }
     yaml.dump(config, open(conf_path, "w"))
 except Exception as e:
@@ -305,8 +305,8 @@ model_config = mlflow.models.ModelConfig(development_config=conf_path)
 
 from agent import AGENT
 
-# Probamos el retriever para confirmar que el agente ya tiene acceso a la guía PDF del router WIFI
-request_example = "¿Cómo reinicio mi router WIFI ADSL-R500?"
+# Probamos el retriever para confirmar que el agente ya tiene acceso a la guía PDF del medidor
+request_example = "¿Cómo reinicio mi medidor inteligente MED-ENERGIA-2024?"
 answer = AGENT.predict({"input":[{"role": "user", "content": request_example}]})
 answer
 
@@ -392,11 +392,11 @@ except Exception as e:
     # Alternativa si la generación sintética no está disponible: unas preguntas escritas a mano
     print(f"generate_evals_df no disponible ({str(e)[:200]}). Se usan preguntas manuales.")
     evals = pd.DataFrame({"inputs": [{"question": q} for q in [
-        "¿Cómo reinicio mi router ADSL-R500?",
-        "Mi router ADSL-R500 muestra el error 01, ¿qué debo hacer?",
-        "¿Cuáles son los pasos para actualizar el firmware del router?",
-        "¿Cuál es la política de devolución de equipos?",
-        "¿Cómo se administra una encuesta de satisfacción al cliente (SAT-SURVEY-2024)?",
+        "¿Cómo reinicio mi medidor inteligente MED-ENERGIA-2024?",
+        "Mi medidor muestra el error E-05, ¿qué debo hacer?",
+        "¿Cuáles son los pasos para solicitar una reconexión del servicio?",
+        "¿Cuál es el plazo de respuesta para una PQR?",
+        "¿Cómo funciona el medidor prepago PREPAGO-2024?",
     ]]})
 display(evals)
 

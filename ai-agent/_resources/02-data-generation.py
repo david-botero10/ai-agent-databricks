@@ -148,7 +148,7 @@ class TelcoDataGenerator:
         """Genera las suscripciones de cada cliente."""
         
         service_types = {
-            "Mobile": 0.60, "Internet": 0.25, "Fiber": 0.10, "ADSL": 0.05
+            "Energia": 0.45, "Agua": 0.35, "Gas": 0.20
         }
         
         subscription_statuses = {
@@ -197,10 +197,9 @@ class TelcoDataGenerator:
                 
                 # Precios base por tipo de servicio y plan
                 base_prices = {
-                    "Mobile": {"Basic": 30, "Standard": 50, "Premium": 80, "Unlimited": 120},
-                    "Internet": {"Basic": 40, "Standard": 60, "Premium": 90, "Unlimited": 150},
-                    "Fiber": {"Basic": 60, "Standard": 80, "Premium": 120, "Unlimited": 200},
-                    "ADSL": {"Basic": 25, "Standard": 35, "Premium": 50, "Unlimited": 80}
+                    "Energia": {"Basic": 35, "Standard": 55, "Premium": 85, "Unlimited": 130},
+                    "Agua": {"Basic": 25, "Standard": 40, "Premium": 65, "Unlimited": 95},
+                    "Gas": {"Basic": 20, "Standard": 32, "Premium": 48, "Unlimited": 75}
                 }
                 
                 base_price = base_prices[service_type][plan_tier]
@@ -218,7 +217,7 @@ class TelcoDataGenerator:
                     start_date = registration_date
                 
                 # Duración del contrato en meses
-                if service_type in ["Fiber", "Internet"]:
+                if service_type in ["Agua", "Gas"]:
                     contract_lengths = [12, 24, 36]
                     contract_weights = [0.3, 0.6, 0.1]
                 else:
