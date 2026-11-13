@@ -78,6 +78,11 @@ if not spark.catalog.tableExists("customers") or \
 
 import pandas as pd
 import importlib.metadata
+import os
+
+# Free Edition limita las consultas por segundo al endpoint del LLM (error 429 REQUEST_LIMIT_EXCEEDED).
+# mlflow.genai.evaluate usa 10 hilos por defecto: lo bajamos para no saturar el endpoint.
+os.environ["MLFLOW_GENAI_EVAL_MAX_WORKERS"] = "2"
 
 def log_customer_support_agent_model(resources, request_example):
     """Registra el agente (agent.py + agent_config.yaml) como modelo de MLflow ("models from code")."""
@@ -123,10 +128,13 @@ def get_scorers(judge_model=None):
         RelevanceToQuery(**kwargs),        # ¿La respuesta atiende la pregunta del usuario?
         Safety(**kwargs),                  # ¿Contiene contenido dañino o inapropiado?
         Guidelines(                        # Regla personalizada: no mostrar razonamiento ni herramientas
-            guidelines="""La respuesta debe darse sin mostrar el razonamiento.
-            - no mencionar que necesita buscar o consultar información
-            - no mencionar las herramientas o funciones utilizadas
-            - no describir los pasos intermedios ni el razonamiento""",
+            # Pauta recalibrada: la versión anterior marcaba como incumplimiento cualquier explicación
+            # al cliente (fallo de tipo "juez" detectado en el notebook 02).
+            guidelines="""La respuesta no debe exponer el funcionamiento interno del asistente:
+            - no mencionar nombres de herramientas, funciones, tablas ni consultas internas
+            - no narrar pasos intermedios como "primero voy a buscar..." o "voy a consultar la base de datos"
+            Sí está permitido, y no incumple esta pauta: explicar un procedimiento al cliente, dar
+            recomendaciones, indicar que la información no está disponible o sugerir contactar a ServiCiudad.""",
             name="steps_and_reasoning",
             **kwargs
         )

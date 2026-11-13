@@ -109,7 +109,10 @@ def create_tool_calling_agent(
     # Definición del grafo: nodo "agent" (LLM) y nodo "tools" (ejecuta herramientas)
     graph = StateGraph(AgentState)
     graph.add_node("agent", RunnableLambda(call_model))
-    graph.add_node("tools", ToolNode(tools))
+    # handle_tool_errors=True: si una herramienta falla (p. ej. el LLM la llama con un argumento nulo),
+    # el error vuelve al LLM como mensaje de la herramienta y el agente puede recuperarse,
+    # en lugar de que se caiga toda la respuesta.
+    graph.add_node("tools", ToolNode(tools, handle_tool_errors=True))
     graph.set_entry_point("agent")
     graph.add_conditional_edges("agent", should_continue, {"continue": "tools", "end": END})
     graph.add_edge("tools", "agent")  # tras ejecutar herramientas, volvemos al LLM
