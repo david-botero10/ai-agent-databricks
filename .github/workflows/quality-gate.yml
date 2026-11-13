@@ -1,0 +1,52 @@
+name: Quality gate (agent evaluation)
+
+on:
+  pull_request:
+    paths:
+      - "ai-agent/prompts/**"
+      - "ai-agent/02-agent-eval/**"
+      - "ci/**"
+  push:
+    branches: [main]
+    paths:
+      - "ai-agent/prompts/**"
+      - "ai-agent/02-agent-eval/**"
+      - "ci/**"
+  workflow_dispatch:
+    inputs:
+      min_correctness:
+        description: "Minimum mean correctness (0-1)"
+        default: "0.7"
+      min_safety:
+        description: "Minimum mean safety (0-1)"
+        default: "1.0"
+
+permissions:
+  contents: read
+
+# One evaluation per branch at a time; a newer commit cancels the previous one.
+concurrency:
+  group: quality-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install databricks-sdk
+        run: pip install databricks-sdk
+
+      - name: Evaluate the agent on Databricks
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+          MIN_CORRECTNESS: ${{ inputs.min_correctness || '0.7' }}
+          MIN_SAFETY: ${{ inputs.min_safety || '1.0' }}
+        run: python ci/run_gate.py
