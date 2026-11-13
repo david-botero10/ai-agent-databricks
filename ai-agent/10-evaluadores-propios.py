@@ -26,6 +26,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 import os
+from typing import Literal
 
 import mlflow
 from mlflow.entities import Feedback
@@ -87,13 +88,17 @@ claridad_cliente = make_judge(
     instructions=(
         "Evalúa si la respuesta {{ outputs }} a la pregunta {{ inputs }} es clara y comprensible "
         "para un cliente de servicios públicos sin conocimientos técnicos. "
-        "Responde 'si' si el cliente podría actuar siguiendo la respuesta sin ayuda adicional, "
+        "Responde 'yes' si el cliente podría actuar siguiendo la respuesta sin ayuda adicional, "
         "y 'no' si usa jerga sin explicarla, es ambigua o le faltan pasos."
     ),
-    feedback_value_type=bool,
+    feedback_value_type=Literal["yes", "no"],
 )
 
-claridad_cliente = claridad_cliente.register(name="claridad_cliente")
+try:
+    # Registrarlo en el experimento permite reutilizarlo en monitoreo de producción
+    claridad_cliente = claridad_cliente.register(name="claridad_cliente")
+except Exception as e:
+    print(f"No se pudo registrar claridad_cliente (se usa sin registrar): {str(e)[:150]}")
 
 # COMMAND ----------
 
@@ -115,7 +120,10 @@ seguridad_medidor = Guidelines(
     """,
 )
 
-seguridad_medidor = seguridad_medidor.register(name="seguridad_medidor")
+try:
+    seguridad_medidor = seguridad_medidor.register(name="seguridad_medidor")
+except Exception as e:
+    print(f"No se pudo registrar seguridad_medidor (se usa sin registrar): {str(e)[:150]}")
 
 # COMMAND ----------
 
@@ -125,9 +133,9 @@ seguridad_medidor = seguridad_medidor.register(name="seguridad_medidor")
 
 # COMMAND ----------
 
-import pandas as pd
+import json
 
-import yaml
+import pandas as pd
 
 eval_dataset = mlflow.genai.datasets.get_dataset(f"{catalog}.{dbName}.ai_agent_mlflow_eval")
 
@@ -166,4 +174,13 @@ print(results.metrics)
 
 # COMMAND ----------
 
-display(results.tables["eval_results"])
+df = results.result_df.copy()
+df["question_type"] = df["expectations"].apply(lambda e: (e or {}).get("question_type", "desconocido"))
+metricas = [c for c in df.columns if c.endswith("/value")]
+for c in metricas:
+    df[c] = df[c].astype(str).str.lower().isin({"yes", "true", "1", "1.0"}).astype(float)
+por_tipo = df.groupby("question_type")[metricas].mean().round(2)
+os.makedirs(f"/Volumes/{catalog}/{dbName}/{volume_name}/experimentos", exist_ok=True)
+por_tipo.to_csv(f"/Volumes/{catalog}/{dbName}/{volume_name}/experimentos/evaluadores_por_tipo.csv")
+display(por_tipo)
+dbutils.notebook.exit(json.dumps({k: round(v, 3) for k, v in results.metrics.items() if k.endswith("/mean")}))
