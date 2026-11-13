@@ -46,14 +46,21 @@ volume_folder = f"/Volumes/{catalog}/{db}/{volume_name}"
 tabular_folders = ["customers", "subscriptions", "billing"]
 
 # Esta versión del proyecto usa un dominio propio (servicios públicos: agua, energía y gas).
-# Por eso los datos y los manuales se generan SIEMPRE localmente: si se descargaran del
-# repositorio de dbdemos quedarían los datos y los PDFs del caso de telecomunicaciones original.
-print("Generando los datos tabulares localmente (puede tardar 1-2 minutos)...")
-# Ruta relativa al notebook principal (todos los notebooks principales están un nivel por debajo de la raíz)
-dbutils.notebook.run("../_resources/02-data-generation", 1800)
+# Los datos y los manuales se generan localmente la PRIMERA vez; si ya existen se reutilizan.
+# No se descargan del repositorio de dbdemos (traerían el corpus original del demo, de otro dominio) y no se
+# regeneran en cada notebook, porque eso cambiaría el texto contra el que se validó el dataset.
+if DBDemos.is_folder_empty(f"{volume_folder}/customers"):
+    print("Generando los datos tabulares localmente (puede tardar 1-2 minutos)...")
+    # Ruta relativa al notebook principal (todos los notebooks principales están un nivel por debajo de la raíz)
+    dbutils.notebook.run("../_resources/02-data-generation", 1800)
+else:
+    print("Datos tabulares ya presentes: se reutilizan.")
 
-print("Generando la documentación PDF con el LLM del workspace (puede tardar varios minutos)...")
-dbutils.notebook.run("../_resources/03-doc-pdf-documentation", 3600)
+if DBDemos.is_folder_empty(f"{volume_folder}/pdf_documentation"):
+    print("Generando la documentación PDF con el LLM del workspace (puede tardar varios minutos)...")
+    dbutils.notebook.run("../_resources/03-doc-pdf-documentation", 3600)
+else:
+    print("Documentación PDF ya presente: se reutiliza.")
 
 print("Datos disponibles en", volume_folder)
 
@@ -104,13 +111,18 @@ def get_scorers(judge_model=None):
 
     judge_model: None para usar los jueces gestionados por Databricks, o un modelo como "databricks:/<endpoint>".
     """
-    from mlflow.genai.scorers import RetrievalGroundedness, RelevanceToQuery, Safety, Guidelines
+    from mlflow.genai.scorers import (
+        Correctness, Guidelines, RelevanceToQuery, RetrievalGroundedness, RetrievalRelevance, Safety,
+    )
+
     kwargs = {"model": judge_model} if judge_model else {}
     return [
-        RetrievalGroundedness(**kwargs),  # ¿La respuesta se basa en los datos recuperados por las herramientas?
-        RelevanceToQuery(**kwargs),       # ¿La respuesta atiende la pregunta del usuario?
-        Safety(**kwargs),                 # ¿Contiene contenido dañino o inapropiado?
-        Guidelines(                       # Regla personalizada: no mostrar razonamiento ni herramientas
+        Correctness(**kwargs),             # ¿La respuesta coincide con la esperada (expectations.expected_response)?
+        RetrievalRelevance(**kwargs),      # ¿Los fragmentos recuperados son pertinentes? (fallo de recuperación)
+        RetrievalGroundedness(**kwargs),   # ¿La respuesta se basa en los datos recuperados por las herramientas?
+        RelevanceToQuery(**kwargs),        # ¿La respuesta atiende la pregunta del usuario?
+        Safety(**kwargs),                  # ¿Contiene contenido dañino o inapropiado?
+        Guidelines(                        # Regla personalizada: no mostrar razonamiento ni herramientas
             guidelines="""La respuesta debe darse sin mostrar el razonamiento.
             - no mencionar que necesita buscar o consultar información
             - no mencionar las herramientas o funciones utilizadas

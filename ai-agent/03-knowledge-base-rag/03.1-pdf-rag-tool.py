@@ -2,7 +2,7 @@
 # MAGIC %md
 # MAGIC # Construir una base de conocimiento a partir de documentación PDF con Databricks Vector Search (RAG)
 # MAGIC
-# MAGIC Como vimos, nuestro agente no responde bien preguntas técnicas específicas, como los códigos de error del router WIFI.
+# MAGIC Como vimos, nuestro agente no responde bien preguntas técnicas específicas, como los códigos de error de los medidores.
 # MAGIC
 # MAGIC Eso se debe a que no tiene conocimiento sobre nuestros sistemas y productos internos.
 # MAGIC
@@ -18,8 +18,12 @@
 # COMMAND ----------
 
 # DBTITLE 1,Instalación de librerías
-# MAGIC %pip install "mlflow>=3.10.1" langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" databricks-feature-engineering==0.14.0 databricks-mcp "mcp<2" "typing_extensions>=4.13" pypdf
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13" pypdf
+
+# COMMAND ----------
+
+# Reinicia Python para cargar las versiones recién instaladas (p. ej. typing_extensions)
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -81,9 +85,9 @@ except Exception as e:
 # MAGIC
 # MAGIC Usamos la función integrada `ai_parse_document` para parsear automáticamente los PDF y `ai_extract` para extraer el nombre del producto y el título.
 # MAGIC
-# MAGIC *Nota: en este caso los PDF son relativamente pequeños, así que unimos todas las páginas de cada documento en un único campo de texto. Documentos más grandes necesitarían pasos de preprocesamiento (chunking) para reducir el tamaño del contexto y poder recuperar más documentos, por ejemplo asegurando que el modelo del router WIFI aparezca en todos los fragmentos para que la búsqueda vectorial sea más relevante.*
+# MAGIC *Nota: en este caso los PDF son relativamente pequeños, así que unimos todas las páginas de cada documento en un único campo de texto. Documentos más grandes necesitarían pasos de preprocesamiento (chunking) para reducir el tamaño del contexto y poder recuperar más documentos, por ejemplo asegurando que el modelo del medidor aparezca en todos los fragmentos para que la búsqueda vectorial sea más relevante.*
 # MAGIC
-# MAGIC *Ordenamos los PDF para procesar primero los usados en los ejemplos (router ADSL-R500, encuestas, códigos de error...) y limitamos la cantidad para controlar el costo.*
+# MAGIC *Ordenamos los PDF para procesar primero los usados en los ejemplos (medidores, códigos de error, reconexión...) y limitamos la cantidad para controlar el costo.*
 
 # COMMAND ----------
 
@@ -284,13 +288,15 @@ sys.path.append(agent_eval_path)
 mlflow.set_experiment(agent_eval_path + "/02.1_agent_evaluation")
 conf_path = os.path.join(agent_eval_path, 'agent_config.yaml')
 
+RETRIEVER_K = 3  # configuración base
+
 try:
     config = yaml.safe_load(open(conf_path))
     config["config_version_name"] = "model_with_retriever"
     config["retriever_config"] = {
         "index_name": vs_index_fullname,
         "tool_name": "product_technical_docs_retriever",
-        "num_results": 1,
+        "num_results": RETRIEVER_K,  # k: fragmentos que devuelve el retriever (experimentos de la Parte 3)
         # La descripción le indica al LLM cuándo usar la herramienta. Como los documentos están en inglés,
         # le pedimos que escriba la consulta (query) en inglés para que la búsqueda vectorial funcione mejor.
         "description": "Recupera documentación interna sobre nuestros servicios públicos (energía, agua y gas): medidores, tarifas, facturación, reconexiones, emergencias y trámites. Usa esta herramienta para cualquier pregunta sobre documentación, procedimientos o problemas con el servicio. IMPORTANTE: escribe siempre la consulta (query) en inglés, porque la documentación está en inglés."
@@ -344,70 +350,11 @@ with mlflow.start_run(run_name=model_config.get('config_version_name')):
 # MAGIC ¡El nuevo modelo está disponible! Como siempre, el siguiente paso es evaluarlo para asegurarnos de que las respuestas mejoran.
 # MAGIC
 # MAGIC
-# MAGIC ### 4.1/ Generar datos de evaluación sintéticos
+# MAGIC ### 4.1/ Dataset de evaluación
 # MAGIC
-# MAGIC Nuestro dataset de evaluación no tiene ninguna pregunta sobre los PDF.
-# MAGIC
-# MAGIC Con Databricks es fácil iniciar el dataset de evaluación con datos sintéticos y luego mejorarlo con el tiempo.
-
-# COMMAND ----------
-
-import pandas as pd
-
-docs = spark.table('knowledge_base')
-# Describimos lo que hace nuestro agente
-agent_description = """
-El agente es un chatbot RAG que responde preguntas técnicas sobre productos como routers wifi, instalación de fibra e información de red, pero también sobre estrategias de retención de clientes o pautas de atención en redes sociales. El agente tiene acceso a un corpus de documentos y su tarea es responder las preguntas del usuario recuperando los documentos relevantes y sintetizando una respuesta útil y precisa.
-"""
-
-question_guidelines = """
-# Perfiles de usuario
-- Un cliente que pregunta cómo solucionar un problema del sistema, paso a paso
-- Un agente interno que pregunta sobre políticas internas
-
-# Preguntas de ejemplo
-- ¿Cómo soluciono el código de error 1001: autorización de devolución inválida cuando un cliente no puede enviar su solicitud de devolución?
-- Me aparece el código de error 1001 al intentar publicar una encuesta. ¿Qué lo puede causar y cómo lo soluciono?
-
-# Pautas adicionales
-- Las preguntas deben ser breves y sonar naturales
-- Las preguntas deben estar escritas en español
-"""
-
-try:
-    from databricks.agents.evals import generate_evals_df
-    # Generamos el dataset de evaluación sintético
-    evals = generate_evals_df(
-        docs,
-        # Número total de evaluaciones a generar. El método intenta cubrir todos los documentos;
-        # si este número es menor que el número de documentos, algunos documentos no tendrán evaluaciones.
-        num_evals=10,
-        # Pautas en texto libre que guían la generación sintética
-        agent_description=agent_description,
-        question_guidelines=question_guidelines
-    )
-    # Adaptamos el formato de entrada al que usa nuestro predict_wrapper: {"question": ...}
-    evals["inputs"] = evals["inputs"].apply(lambda x: {"question": x["messages"][0]["content"]})
-except Exception as e:
-    # Alternativa si la generación sintética no está disponible: unas preguntas escritas a mano
-    print(f"generate_evals_df no disponible ({str(e)[:200]}). Se usan preguntas manuales.")
-    evals = pd.DataFrame({"inputs": [{"question": q} for q in [
-        "¿Cómo reinicio mi medidor inteligente MED-ENERGIA-2024?",
-        "Mi medidor muestra el error E-05, ¿qué debo hacer?",
-        "¿Cuáles son los pasos para solicitar una reconexión del servicio?",
-        "¿Cuál es el plazo de respuesta para una PQR?",
-        "¿Cómo funciona el medidor prepago PREPAGO-2024?",
-    ]]})
-display(evals)
-
-# COMMAND ----------
-
-# Agregamos el dataset sintético a nuestro dataset de evaluación de MLflow
-eval_dataset_table_name = f"{catalog}.{dbName}.ai_agent_mlflow_eval"
-
-eval_dataset = mlflow.genai.datasets.get_dataset(eval_dataset_table_name)
-eval_dataset.merge_records(evals)
-print("Registros agregados al dataset de evaluación.")
+# MAGIC Usamos **solo** el dataset curado de 15 preguntas (6 directas, 3 multi-documento, 3 sin respuesta y 3 adversarias),
+# MAGIC con cada respuesta esperada verificada contra los PDF. No se agregan preguntas sintéticas: no tienen respuesta
+# MAGIC esperada verificada y harían que `Correctness` castigue respuestas correctas.
 
 # COMMAND ----------
 

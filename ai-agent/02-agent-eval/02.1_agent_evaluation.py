@@ -28,8 +28,12 @@
 # COMMAND ----------
 
 # DBTITLE 1,Instalación de librerías
-# MAGIC %pip install "mlflow>=3.10.1" langchain==0.3.27 langgraph==0.6.11 databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" databricks-feature-engineering==0.14.0 databricks-mcp "mcp<2" "typing_extensions>=4.13"
-# MAGIC dbutils.library.restartPython()
+# MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" "typing_extensions>=4.13"
+
+# COMMAND ----------
+
+# Reinicia Python para cargar las versiones recién instaladas (p. ej. typing_extensions)
+dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -205,17 +209,19 @@ import mlflow.genai.datasets
 # El dataset de evaluación de MLflow se guarda como tabla en Unity Catalog
 eval_dataset_table_name = f"{catalog}.{dbName}.ai_agent_mlflow_eval"
 
+# Se recrea siempre desde las 15 preguntas curadas: así ninguna corrida anterior
+# (p. ej. con preguntas sintéticas sin respuesta verificada) contamina la evaluación.
 try:
-  # Si ya existe, lo reutilizamos
-  eval_dataset = mlflow.genai.datasets.get_dataset(eval_dataset_table_name)
+  mlflow.genai.datasets.delete_dataset(eval_dataset_table_name)
+  print("Dataset anterior eliminado.")
 except Exception as e:
-  if 'does not exist' in str(e) or 'not found' in str(e).lower():
-    # Si no existe, lo creamos y le agregamos los ejemplos
-    eval_dataset = mlflow.genai.datasets.create_dataset(eval_dataset_table_name)
-    eval_dataset.merge_records(eval_example.toPandas())
-    print("Registros agregados al dataset de evaluación.")
-  else:
-    raise e
+  print(f"No había dataset anterior ({str(e)[:80]})")
+spark.sql(f"DROP TABLE IF EXISTS {eval_dataset_table_name}")  # respaldo si la API no borró la tabla
+eval_dataset = mlflow.genai.datasets.create_dataset(eval_dataset_table_name)
+eval_dataset.merge_records(eval_example.toPandas())
+n_records = len(eval_dataset.to_df())
+assert n_records == 15, f"Se esperaban 15 preguntas curadas y hay {n_records}"
+print(f"Dataset de evaluación listo: {n_records} preguntas.")
 
 # Vista previa del dataset
 display(eval_dataset.to_df())
@@ -233,28 +239,11 @@ display(eval_dataset.to_df())
 
 # COMMAND ----------
 
-from mlflow.genai.scorers import RetrievalGroundedness, RelevanceToQuery, Safety, Guidelines
-
-def get_scorers(judge_model=None):
-    # judge_model=None usa los jueces gestionados por Databricks (ver JUDGE_MODEL en config)
-    kwargs = {"model": judge_model} if judge_model else {}
-    return [
-        RetrievalGroundedness(**kwargs),  # ¿La respuesta se basa en los datos recuperados?
-        RelevanceToQuery(**kwargs),       # ¿La respuesta atiende la solicitud del usuario?
-        Safety(**kwargs),                 # ¿Hay contenido dañino o inapropiado?
-        Guidelines(
-            guidelines="""
-            La respuesta debe darse sin mostrar el razonamiento.
-            - no mencionar que necesita buscar o consultar información
-            - no mencionar las herramientas o funciones utilizadas
-            - no describir los pasos intermedios ni el razonamiento
-            """,
-            name="steps_and_reasoning",
-            **kwargs
-        )
-    ]
-
+# get_scorers() se define una sola vez en _resources/01-setup (Correctness, RetrievalRelevance,
+# RetrievalGroundedness, RelevanceToQuery, Safety y la guía steps_and_reasoning).
+# No se redefine aquí: así todos los notebooks evalúan con los mismos jueces.
 scorers = get_scorers(JUDGE_MODEL)
+print([s.name for s in scorers])
 
 # COMMAND ----------
 
@@ -363,7 +352,8 @@ from databricks import agents
 from databricks.sdk import WorkspaceClient
 from datetime import timedelta
 
-if DEPLOY_AGENT_ENDPOINT:
+# El endpoint se despliega una sola vez, con la versión con RAG, al final del notebook 03.
+if DEPLOY_AGENT_ENDPOINT and False:
     try:
         # Despliega el modelo en un endpoint de Model Serving (+ review app) solo si esta versión no está desplegada
         if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)) == 0:
@@ -386,6 +376,6 @@ else:
 # MAGIC
 # MAGIC Nuestro modelo funciona bien, pero no puede responder preguntas específicas que los clientes tienen sobre sus servicios.
 # MAGIC
-# MAGIC Por ejemplo, si le preguntamos al agente cómo resolver un código de error de nuestro router WIFI, fallará porque no tiene información sobre ello.
+# MAGIC Por ejemplo, si le preguntamos al agente cómo resolver un código de error de su medidor, fallará porque no tiene información sobre ello.
 # MAGIC
 # MAGIC Abre [03-knowledge-base-rag/03.1-pdf-rag-tool]($../03-knowledge-base-rag/03.1-pdf-rag-tool)

@@ -23,7 +23,6 @@
 # DBTITLE 1,Instalación de librerías
 # MAGIC %pip install "mlflow>=3.10.1" databricks-langchain databricks-agents "unitycatalog-langchain[databricks]" databricks-feature-engineering==0.14.0 "typing_extensions>=4.13"
 # MAGIC # Reiniciamos Python para cargar los paquetes recién instalados
-# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -103,7 +102,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- En una telco, los "pedidos" de un cliente son sus suscripciones: lo indicamos en el COMMENT para que el LLM elija esta herramienta.
+# MAGIC -- En una empresa de servicios públicos, los "pedidos" de un cliente son sus contratos de servicio: lo indicamos en el COMMENT para que el LLM elija esta herramienta.
 # MAGIC -- Borramos la versión anterior con nombre largo (si existe) para que el agente no la cargue
 # MAGIC DROP FUNCTION IF EXISTS get_customer_billing_and_subscriptions;
 # MAGIC
