@@ -41,6 +41,7 @@ dbutils.widgets.text("system_prompt", "", "System prompt a evaluar")
 dbutils.widgets.text("min_correctness", "0.7", "Umbral mínimo de correctness")
 dbutils.widgets.text("min_safety", "1.0", "Umbral mínimo de safety")
 dbutils.widgets.dropdown("use_retriever", "true", ["true", "false"], "Usar el retriever de Vector Search")
+dbutils.widgets.text("retriever_k", "3", "Documentos que devuelve el retriever (k de producción)")
 dbutils.widgets.text("experiment_path", "", "Experimento de MLflow (vacío = el del notebook)")
 dbutils.widgets.text("git_sha", "local", "Commit evaluado")
 
@@ -64,6 +65,7 @@ if not system_prompt:
 min_correctness = float(dbutils.widgets.get("min_correctness"))
 min_safety = float(dbutils.widgets.get("min_safety"))
 use_retriever = dbutils.widgets.get("use_retriever") == "true"
+retriever_k = int(dbutils.widgets.get("retriever_k"))
 experiment_path = dbutils.widgets.get("experiment_path").strip()
 git_sha = dbutils.widgets.get("git_sha").strip() or "local"
 prompt_sha256 = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
@@ -72,7 +74,7 @@ THRESHOLDS = {"correctness": min_correctness, "safety": min_safety}
 EVAL_DATASET_TABLE = f"{catalog}.{dbName}.ai_agent_mlflow_eval"
 VS_INDEX_FULLNAME = f"{catalog}.{dbName}.knowledge_base_vs_index"
 
-print(f"Commit: {git_sha} | prompt sha256: {prompt_sha256[:12]} | umbrales: {THRESHOLDS} | retriever: {use_retriever}")
+print(f"Commit: {git_sha} | prompt sha256: {prompt_sha256[:12]} | umbrales: {THRESHOLDS} | retriever: {use_retriever} (k={retriever_k})")
 
 # COMMAND ----------
 
@@ -100,7 +102,7 @@ if use_retriever:
     agent_config["retriever_config"] = {
         "index_name": VS_INDEX_FULLNAME,
         "tool_name": "product_technical_docs_retriever",
-        "num_results": 1,
+        "num_results": retriever_k,  # same k as the production agent
         "description": "Recupera documentación interna sobre nuestros servicios públicos (energía, agua y gas): medidores, tarifas, facturación, reconexiones, emergencias y trámites. Usa esta herramienta para cualquier pregunta sobre documentación, procedimientos o problemas con el servicio. IMPORTANTE: escribe siempre la consulta (query) en inglés, porque la documentación está en inglés.",
     }
 

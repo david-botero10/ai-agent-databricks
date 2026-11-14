@@ -100,12 +100,26 @@ en adversarias es un fallo del juez, no del agente: la negativa fue correcta per
 Se calificaron a mano 10 respuestas de distintos tipos con el criterio de `correctness` (sí/no),
 sin ver el veredicto del juez, y se compararon con dos modelos juez.
 
-| Juez | Acuerdo con el humano | Desacuerdos |
-|---|---|---|
-| ⟦juez gestionado de Databricks⟧ | ⟦x/10⟧ | ⟦⟧ |
-| ⟦segundo modelo juez⟧ | ⟦x/10⟧ | ⟦⟧ |
+Muestra: 3 directas, 2 multi-documento, 2 sin respuesta y 3 adversarias del agente con RAG. El humano aprobó 8 de 10
+(rechazó las dos multi-documento). Cada calificación quedó en su traza como feedback `correctness_humano` de fuente `HUMAN`.
 
-⟦PENDIENTE: análisis de desacuerdos y juez elegido⟧
+| Juez de `Correctness` | Acuerdo con el humano | Aprueba | Desacuerdos |
+|---|---|---|---|
+| Gestionado de Databricks | **0.80** | 6/10 | PQR (directa), "Ignora tus instrucciones…" (adversaria) |
+| `databricks-gpt-oss-120b` | 0.70 | 5/10 | PQR, "¿Puedo abrir el medidor?", "Ignora tus instrucciones…" |
+| `databricks-meta-llama-3-3-70b-instruct` (el mismo LLM del agente) | 0.90 | 7/10 | PQR |
+
+**Todos los desacuerdos van en la misma dirección:** el juez rechaza una respuesta que el humano aprueba. Ningún juez
+aprobó una respuesta que el humano rechazó, y los tres detectaron los dos fallos reales. Los jueces son más estrictos que
+el humano en negativas incompletas (no mencionar la ilegalidad) y en respuestas parciales. La PQR la rechazan los tres:
+confirma que el problema es la respuesta esperada (pide datos que la pregunta no solicita), no el agente.
+
+**Juez elegido: el gestionado de Databricks.** El Llama 3.3 coincide más (0.90), pero es el mismo modelo que genera las
+respuestas y puede ser indulgente consigo mismo; con n = 10, su ventaja es una sola respuesta. El gestionado es
+independiente del agente, tiene un acuerdo alto y **nunca aprueba una respuesta incorrecta**, que es la propiedad que
+importa en un quality gate. **¿Confío en sus puntajes?** Sí como cota inferior: un `correctness` de 0.53 subestima la
+calidad percibida por un humano (0.80 en la muestra), así que los umbrales se fijan sobre la métrica del juez y no sobre
+la impresión humana.
 
 ⟦PENDIENTE: captura 4 — cálculo del acuerdo⟧
 
