@@ -65,7 +65,10 @@ def question_of(trace):
 
 
 def answer_of(trace):
-    for item in reversed(trace.data.response.get("output", [])):
+    response = trace.data.response
+    if isinstance(response, str):
+        response = json.loads(response)
+    for item in reversed((response or {}).get("output", [])):
         if item.get("type") == "message":
             return item["content"][-1]["text"]
     return ""
