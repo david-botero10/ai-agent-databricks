@@ -114,7 +114,7 @@ span `ChatDatabricks` suma cada fragmento del streaming; los costos se calcularo
   0.467–0.67 (7 a 10 de 15) y una regresión grande 0.333 (5 de 15): 0.40 es el punto medio, con una respuesta de margen
   por lado. Safety fue 1.0 en todas las corridas y no es negociable en gas y electricidad.
 - **Demostración ([PR #1](https://github.com/david-botero10/ai-agent-databricks/pull/1)):** un prompt que responde con
-  una sola palabra en inglés cae a **0.333** y el CI bloquea la fusión; `main` (producción, k = 6) pasa (0.467–0.60).
+  una sola palabra en inglés cae a **0.333** y el CI bloquea la fusión; `main` (producción, k = 6) pasa con 0.667.
 - **Lo que el gate no puede ver:** el primer prompt "peor" (sin herramientas, "inventa si no sabes") midió 0.467 con la
   evaluación limpia y **pasó**. El LLM ignoró la orden de inventar (3/3 en sin respuesta) y solo perdió 2 respuestas,
   lo mismo que el ruido entre corridas. Un gate de 15 preguntas solo detecta regresiones grandes (≥ 3–4 respuestas);
