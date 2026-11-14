@@ -114,7 +114,7 @@ span `ChatDatabricks` suma cada fragmento del streaming; los costos se calcularo
   peor corrida de producción (no falla por azar); safety fue 1.0 en todas las corridas y no es negociable en gas y
   electricidad.
 - **Demostración:** en el [PR #1](https://github.com/david-botero10/ai-agent-databricks/pull/1), un prompt que prohíbe
-  herramientas y pide inventar respuestas cae a **0.267** y el CI lo bloquea; `main` pasa con 0.533.
+  herramientas y pide inventar respuestas cae a **0.267** y el CI lo bloquea; `main` (producción, k = 6) pasa con 0.60.
 - **Un CI en verde que no significaba nada:** al promover k = 6, GitHub marcó éxito con un log que decía
   `correctness 0.333 NO CUMPLE`. Databricks **reintenta solo** las tareas serverless que fallan, y el reintento pasó.
   Además, el gate usaba 10 hilos y los 429 del LLM contaban como respuestas incorrectas. Corregido: `max_retries=0`,
