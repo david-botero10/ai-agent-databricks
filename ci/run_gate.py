@@ -101,7 +101,8 @@ def print_output(w, run):
     """Prints the notebook exit value, the error and the tail of the logs of the gate task."""
     if not run.tasks:
         return
-    out = w.jobs.get_run_output(run.tasks[0].run_id)
+    # Print the last attempt; a retried task appears once per attempt.
+    out = w.jobs.get_run_output(run.tasks[-1].run_id)
     if out.notebook_output and out.notebook_output.result:
         print("--- notebook output ---")
         print(out.notebook_output.result)
@@ -162,6 +163,9 @@ def main():
                     ),
                     environment_key="gate",
                     timeout_seconds=RUN_TIMEOUT_S,
+                    # Serverless tasks are retried automatically on failure: a gate must get exactly one attempt,
+                    # otherwise a worse prompt gets a second chance to pass on evaluation noise.
+                    max_retries=0,
                 )
             ],
             environments=[
@@ -181,6 +185,12 @@ def main():
 
         result = run.state.result_state if run.state else None
         log(f"result: {result.value if result else 'UNKNOWN'}")
+        # Fail closed: any failed attempt of the gate task fails CI, whatever the final run state says.
+        failed_attempts = [t for t in (run.tasks or [])
+                           if t.state and t.state.result_state and t.state.result_state != jobs.RunResultState.SUCCESS]
+        if failed_attempts:
+            log(f"{len(failed_attempts)} of {len(run.tasks)} task attempt(s) did not succeed: gate failed")
+            return 1
         return 0 if result == jobs.RunResultState.SUCCESS else 1
     except KeyboardInterrupt:
         # GitHub cancels the job with SIGINT: do not leave the evaluation running on Databricks.
