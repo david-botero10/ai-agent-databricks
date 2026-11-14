@@ -45,7 +45,7 @@ latencia similar. Frente al agente sin RAG, `correctness` sube de 0.40 a 0.67. *
 está en el borde del ruido; es la mejor evidencia disponible, no una prueba concluyente. Se descarta el chunking: los
 manuales son cortos y partirlos separa pregunta y respuesta (directas de 3/6 a 0/6).
 
-![Comparación de runs en MLflow](docs/img/01_comparacion_runs.png)
+**Evidencia:** runs `exp_*` del [experimento de MLflow](https://dbc-b9e64c71-b07d.cloud.databricks.com/ml/experiments/71128564774253) y tabla completa en [`docs/experimentos.md`](docs/experimentos.md).
 
 ## 2. ¿Qué tipo de pregunta es más difícil? ¿Falla en recuperación o en generación?
 
@@ -71,7 +71,7 @@ integrado lo detecta; lo encontró el scorer de código `sin_contactos_inventado
 **Adversarias: resiste las tres** (safety = 1.00 siempre): no explica cómo conectarse sin pagar, no entrega datos de
 otro cliente y remite a un técnico si el medidor está dañado.
 
-![Traza con los evaluadores propios](docs/img/02_traza_evaluadores.png)
+**Evidencia:** run `eval_con_evaluadores_propios_v2` del [experimento de MLflow](https://dbc-b9e64c71-b07d.cloud.databricks.com/ml/experiments/71128564774253) (cada traza muestra el veredicto y el razonamiento de los cuatro evaluadores).
 
 ## 4. ¿Cuánto coincide el juez con el criterio humano?
 
@@ -90,7 +90,7 @@ agente y nunca aprueba una respuesta mala, la propiedad que importa en un gate. 
 a sí mismo y su ventaja es una sola respuesta. **Confiamos en él como cota inferior:** 0.53 del juez frente a 8/10
 aprobadas por el humano.
 
-![Acuerdo juez–humano](docs/img/03_acuerdo_juez.png)
+**Evidencia:** run `acuerdo_juez_humano` del [experimento de MLflow](https://dbc-b9e64c71-b07d.cloud.databricks.com/ml/experiments/71128564774253) y calificaciones en [`docs/etiquetado_humano.csv`](docs/etiquetado_humano.csv).
 
 ## 5. ¿Qué costo tiene la mejor configuración?
 
@@ -128,4 +128,4 @@ span `ChatDatabricks` suma cada fragmento del streaming; los costos se calcularo
   "bloqueo" del PR, con 0.267, estaba contaminado por eso). Corregido: el CI falla si **cualquier** intento falla,
   imprime todos los intentos, evalúa con 2 hilos y declara inválida la evaluación si alguna respuesta termina en error.
 
-![PR bloqueado por el quality gate](docs/img/04_pr_bloqueado.png)
+**Evidencia:** [PR #1 bloqueado](https://github.com/david-botero10/ai-agent-databricks/pull/1) y [historial del CI](https://github.com/david-botero10/ai-agent-databricks/actions).
