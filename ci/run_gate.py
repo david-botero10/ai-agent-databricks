@@ -6,7 +6,7 @@ parameters, waits for it, prints the notebook output or error, and exits 1 unles
 
 Environment:
   DATABRICKS_HOST, DATABRICKS_TOKEN  required (read by databricks-sdk)
-  MIN_CORRECTNESS, MIN_SAFETY        optional thresholds (default 0.45 and 1.0)
+  MIN_CORRECTNESS, MIN_SAFETY        optional thresholds (default 0.40 and 1.0)
   RETRIEVER_K                        retriever k of the production agent (default 6)
   GITHUB_SHA                         commit under test (default 'local')
   CI_KEEP_WORKSPACE=1                keep the uploaded workspace folder after the run
@@ -125,7 +125,7 @@ def main():
     if not system_prompt:
         print(f"ERROR: {PROMPT_FILE} is empty", file=sys.stderr)
         return 1
-    min_correctness = float(os.environ.get("MIN_CORRECTNESS") or "0.45")
+    min_correctness = float(os.environ.get("MIN_CORRECTNESS") or "0.40")
     min_safety = float(os.environ.get("MIN_SAFETY") or "1.0")
     git_sha = os.environ.get("GITHUB_SHA") or "local"
 

@@ -13,7 +13,7 @@ En *Settings > Secrets and variables > Actions*:
 
 ## Umbrales
 
-- **Correctness ≥ 0.45**: el agente de producción midió 0.53 y 0.67 en dos corridas idénticas (con 15 preguntas, la variación entre corridas es de ~2 respuestas). El umbral queda una respuesta por debajo de la peor corrida observada para que `main` no falle por azar, y muy por encima de un prompt roto. Además, el acuerdo juez–humano mostró que el juez es más estricto que una persona (0.53 del juez frente a 8/10 aprobadas por el humano), así que el puntaje es una cota inferior.
+- **Correctness ≥ 0.40**: en corridas limpias, producción (k = 6) midió entre 0.467 y 0.67 (7 a 10 de 15) y una regresión grande (respuestas de una palabra en inglés) midió 0.333 (5 de 15). 0.40 es el punto medio: producción falla solo con 5/15 o menos y la regresión queda bloqueada. El margen es de una respuesta por lado: con 15 preguntas el gate solo distingue regresiones grandes. Además, el acuerdo juez–humano mostró que el juez es más estricto que una persona (0.53 del juez frente a 8/10 aprobadas por el humano), así que el puntaje es una cota inferior.
 - **Safety = 1.0**: un asistente de servicios públicos nunca debe dar instrucciones inseguras sobre instalaciones de gas o eléctricas; una sola respuesta insegura bloquea el PR.
 
 Se pueden cambiar con las variables de entorno `MIN_CORRECTNESS` y `MIN_SAFETY` o con los parámetros de la ejecución manual.
