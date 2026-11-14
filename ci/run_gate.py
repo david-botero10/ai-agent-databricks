@@ -98,23 +98,21 @@ def wait_for_run(w, run_id):
 
 
 def print_output(w, run):
-    """Prints the notebook exit value, the error and the tail of the logs of the gate task."""
-    if not run.tasks:
-        return
-    # Print the last attempt; a retried task appears once per attempt.
-    out = w.jobs.get_run_output(run.tasks[-1].run_id)
-    if out.notebook_output and out.notebook_output.result:
-        print("--- notebook output ---")
-        print(out.notebook_output.result)
-    if out.error:
-        print("--- error ---")
-        print(out.error)
-    if out.error_trace:
-        print("--- error trace (tail) ---")
-        print(out.error_trace[-6000:])
-    if out.logs:
-        print("--- logs (tail) ---")
-        print(out.logs[-6000:])
+    """Prints the notebook exit value, the error and the tail of the logs of every gate attempt."""
+    tasks = run.tasks or []
+    for i, task in enumerate(tasks, start=1):
+        if len(tasks) > 1:
+            print(f"===== attempt {i} of {len(tasks)} =====")
+        out = w.jobs.get_run_output(task.run_id)
+        if out.notebook_output and out.notebook_output.result:
+            print("--- notebook output ---")
+            print(out.notebook_output.result)
+        if out.error:
+            print("--- error ---")
+            print(out.error)
+        if out.error_trace:
+            print("--- error trace (tail) ---")
+            print(out.error_trace[-3000:])
 
 
 def main():
