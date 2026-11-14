@@ -7,7 +7,7 @@ parameters, waits for it, prints the notebook output or error, and exits 1 unles
 Environment:
   DATABRICKS_HOST, DATABRICKS_TOKEN  required (read by databricks-sdk)
   MIN_CORRECTNESS, MIN_SAFETY        optional thresholds (default 0.45 and 1.0)
-  RETRIEVER_K                        retriever k of the production agent (default 3)
+  RETRIEVER_K                        retriever k of the production agent (default 6)
   GITHUB_SHA                         commit under test (default 'local')
   CI_KEEP_WORKSPACE=1                keep the uploaded workspace folder after the run
 """
@@ -154,7 +154,7 @@ def main():
                         base_parameters={
                             "system_prompt": system_prompt,
                             "min_correctness": str(min_correctness),
-                            "retriever_k": os.environ.get("RETRIEVER_K") or "3",
+                            "retriever_k": os.environ.get("RETRIEVER_K") or "6",
                             "min_safety": str(min_safety),
                             "experiment_path": f"{ci_root}/quality_gate_experiment",
                             "git_sha": git_sha,

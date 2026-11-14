@@ -46,19 +46,27 @@ que sí es estable entre corridas: **multi-documento = 0.00**, sin respuesta = 1
 
 ## 1. ¿Qué configuración llevamos a producción y por qué?
 
-| Configuración | Prompt | k | Chunk | Correctness | Groundedness | Safety | Latencia p50 |
+Cada variante cambia **una sola variable** respecto a la base (prompt v2, documento completo por fila, k = 3), sobre las
+15 preguntas curadas y con los mismos jueces (`03.2-experimentos`).
+
+| Variante | Correctness | Directa | Multi-doc | Sin resp. | Advers. | Tokens reales/pregunta | Latencia p50 |
 |---|---|---|---|---|---|---|---|
-| Base | v1 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
-| Prompt v2 | v2 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
-| k = 2 | v2 | 2 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
-| k = 6 | v2 | 6 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
-| Chunk 256 | v2 | ⟦⟧ | 256 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
-| Chunk 1024 | v2 | ⟦⟧ | 1024 | ⟦⟧ | ⟦⟧ | ⟦⟧ | ⟦⟧ |
+| Sin RAG (prompt v2) | 0.40 | 0/6 | 0/3 | 3/3 | 3/3 | — | — |
+| Base RAG (k = 3) | 0.53 | 3/6 | 0/3 | 3/3 | 2/3 | 7.536 | 4.9 s |
+| Prompt v1 | 0.60 | 3/6 | 0/3 | 3/3 | 3/3 | 7.481 | 8.8 s |
+| k = 2 | 0.53 | 3/6 | 0/3 | 3/3 | 2/3 | 6.474 | 8.7 s |
+| **k = 6** | **0.67** | 3/6 | **1/3** | 3/3 | 3/3 | 11.758 | 5.5 s |
+| Chunk 256 | 0.40 | 0/6 | 0/3 | 3/3 | 3/3 | 2.929 | 2.8 s |
+| Chunk 1024 | 0.33 | 1/6 | 0/3 | 3/3 | 1/3 | 4.054 | 2.5 s |
 
-Cada fila cambia **una sola variable** respecto a la anterior configuración ganadora. Detalle en
-[`docs/experimentos.md`](docs/experimentos.md).
-
-⟦PENDIENTE: decisión — versión N promovida con el alias `model-to-deploy`, y la mejora concreta frente a la base⟧
+**A producción: prompt v2 + documento completo + k = 6** (registrado en Unity Catalog con el alias `model-to-deploy` por
+el notebook `13-promover-version`). Es la única configuración que respondió bien una pregunta multi-documento, el fallo
+dominante que diagnosticamos como de recuperación (no llegaba el segundo manual), con latencia similar a la base.
+Frente al agente sin RAG, `correctness` pasa de 0.40 a 0.67 y las multi-documento de 0/3 a 1/3, con safety = 1.00.
+**Matiz honesto:** con 15 preguntas, +2 respuestas está en el borde de la variación entre corridas (±0.13); es la mejor
+evidencia disponible, no una prueba concluyente. Se mantiene el prompt v2 aunque v1 sacó 0.60 (una respuesta de
+diferencia): v2 corrige la adversaria de datos de terceros sin RAG y fija restricciones del dominio. El chunking se
+descarta: los manuales son cortos y partirlos separa la pregunta de su respuesta (las directas caen de 3/6 a 0/6).
 
 ⟦PENDIENTE: captura 2 — comparación de runs en MLflow⟧
 
@@ -135,12 +143,30 @@ la impresión humana.
 
 ## 5. ¿Qué costo tiene la mejor configuración en latencia y tokens?
 
-⟦PENDIENTE: latencia media y p95, tokens de entrada/salida por pregunta, leídos de las trazas; comparación
-con la configuración más barata y conclusión de si la mejora justifica el costo⟧
+La configuración de producción (k = 6) consume **11.758 tokens por pregunta** (11.612 de entrada, 146 de salida, en
+~1.8 llamadas al LLM) con una **latencia mediana de 5.5 s** (p90: 13.5 s). Frente a la base k = 3 son **+56 % de tokens**
+y +0.6 s; frente a la más barata (chunk 256: 2.929 tokens y 2.8 s) es 4 veces más cara.
+
+**¿Vale la pena?** Sí frente a chunk 256, que ahorra tokens pero pierde todas las preguntas directas (0/6): en atención al
+cliente una respuesta incorrecta cuesta más que 9 mil tokens. Frente a k = 3 la ganancia es pequeña y cercana al ruido;
+se acepta porque ataca el fallo dominante y la latencia no cambia de forma perceptible.
+
+**Hallazgo de medición:** el total de tokens que MLflow agrega en cada traza venía inflado (~460 mil por pregunta). El
+span `ChatDatabricks` de LangChain suma el uso de cada fragmento del streaming (p. ej. 204.363 tokens de entrada para
+una llamada cuya llamada real a la API, `DatabricksCompletions`, usó 7.047). Los costos de esta sección se calcularon
+sumando solo los spans `DatabricksCompletions`. Las latencias son de corridas con otras evaluaciones en paralelo y tienen
+ruido (k = 2 y prompt v1 midieron ~8.7 s por contención del endpoint).
 
 ## 6. Si tuviera una semana más, ¿qué cambiaría primero?
 
-⟦PENDIENTE: completar con base en el fallo dominante del punto 2⟧
+1. **Búsqueda por subpreguntas para las multi-documento.** El fallo dominante es que el agente hace una sola consulta que
+   mezcla dos temas. Descomponer la pregunta y recuperar por cada parte ataca la causa; subir k solo la mitiga y encarece.
+2. **Arreglar la instrumentación del retriever.** Que el span `RETRIEVER` devuelva documentos estructurados habilitaría
+   `RetrievalRelevance` y `RetrievalGroundedness`, y el diagnóstico recuperación/generación sería automático.
+3. **Ampliar el dataset a ~50 preguntas** (sobre todo multi-documento) y corregir la respuesta esperada de PQR: con 15
+   preguntas la variación entre corridas (±0.13) es del mismo tamaño que las diferencias que queremos medir.
+4. **Llevar `sin_contactos_inventados` al quality gate** y agregar al prompt que nunca invente teléfonos ni correos: es
+   la alucinación más peligrosa que encontramos y ningún juez integrado la detecta.
 
 ## Producción y CI
 

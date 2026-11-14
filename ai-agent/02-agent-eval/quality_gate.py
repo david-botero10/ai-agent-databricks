@@ -41,7 +41,7 @@ dbutils.widgets.text("system_prompt", "", "System prompt a evaluar")
 dbutils.widgets.text("min_correctness", "0.45", "Umbral mínimo de correctness")
 dbutils.widgets.text("min_safety", "1.0", "Umbral mínimo de safety")
 dbutils.widgets.dropdown("use_retriever", "true", ["true", "false"], "Usar el retriever de Vector Search")
-dbutils.widgets.text("retriever_k", "3", "Documentos que devuelve el retriever (k de producción)")
+dbutils.widgets.text("retriever_k", "6", "Documentos que devuelve el retriever (k de producción)")
 dbutils.widgets.text("experiment_path", "", "Experimento de MLflow (vacío = el del notebook)")
 dbutils.widgets.text("git_sha", "local", "Commit evaluado")
 
