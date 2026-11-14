@@ -21,7 +21,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/01-setup
+# MAGIC %run ./_resources/01-setup
 
 # COMMAND ----------
 
@@ -34,7 +34,7 @@ from mlflow.genai import make_judge
 from mlflow.genai.scorers import Guidelines, scorer
 
 # Mismo experimento que el notebook 02, para que todo quede en el mismo lugar
-xp_name = os.getcwd().rsplit("/", 1)[0] + "/02-agent-eval/02.1_agent_evaluation"
+xp_name = os.getcwd() + "/02-agent-eval/02.1_agent_evaluation"
 mlflow.set_experiment(xp_name)
 
 # COMMAND ----------

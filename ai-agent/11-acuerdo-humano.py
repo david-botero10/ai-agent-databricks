@@ -24,7 +24,7 @@ dbutils.library.restartPython()
 
 # COMMAND ----------
 
-# MAGIC %run ../_resources/01-setup
+# MAGIC %run ./_resources/01-setup
 
 # COMMAND ----------
 
@@ -43,7 +43,7 @@ MODO = dbutils.widgets.get("modo")
 EVAL_RUN_NAME = dbutils.widgets.get("eval_run_name")
 ETIQUETADOR = dbutils.widgets.get("etiquetador")
 
-xp_name = os.getcwd().rsplit("/", 1)[0] + "/02-agent-eval/02.1_agent_evaluation"
+xp_name = os.getcwd() + "/02-agent-eval/02.1_agent_evaluation"
 mlflow.set_experiment(xp_name)
 RUTA = f"/Volumes/{catalog}/{dbName}/{volume_name}/etiquetado_humano.csv"
 

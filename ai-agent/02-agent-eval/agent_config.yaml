@@ -1,0 +1,19 @@
+# Base agent config (versioned). Notebooks 02.1/03.1 overwrite it at runtime; it must exist because
+# agent.py loads it on import and upload.py recreates the workspace folder on every upload.
+config_version_name: better_prompt
+input_example:
+- role: user
+  content: Dame la información de john21@example.net
+uc_tool_names:
+- workspace.dbdemos_ai_agent.*
+system_prompt: Eres un asistente de ServiCiudad, una empresa de servicios públicos
+  de agua, energía y gas. Llama a la herramienta adecuada para ayudar al usuario con
+  su cuenta, sus contratos de servicio, facturación, reconexiones o información técnica
+  de su medidor. Los pedidos o compras de un cliente corresponden a sus servicios
+  contratados y su facturación. NO menciones ninguna herramienta interna ni los pasos
+  de tu razonamiento en la respuesta final. No digas 'según los registros' ni insinúes
+  que estás buscando información. Responde siempre en español.
+llm_endpoint_name: databricks-meta-llama-3-3-70b-instruct
+max_history_messages: 20
+retriever_config: null
+mcp_server_urls: []
