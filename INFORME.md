@@ -1,6 +1,6 @@
 # Informe — Asistente de ServiCiudad con GenAIOps en Databricks
 
-**Autor:** David Botero · Seminario, Maestría en Ciencias de los Datos y Analítica (EAFIT) · noviembre de 2026
+**Autores:** David Botero, Jorge Giraldo y Samuel Padierna · Seminario, Maestría en Ciencias de los Datos y Analítica (EAFIT) · noviembre de 2026
 **Repositorio:** https://github.com/david-botero10/ai-agent-databricks · detalle de experimentos y fallos en
 [`docs/experimentos.md`](docs/experimentos.md)
 
