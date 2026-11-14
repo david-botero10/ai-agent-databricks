@@ -26,6 +26,7 @@ dbutils.library.restartPython()
 # COMMAND ----------
 
 import os
+import re
 from typing import Literal
 
 import mlflow
@@ -69,6 +70,27 @@ def sin_fugas_internas(outputs: str) -> Feedback:
             "No se detectaron identificadores internos."
             if not encontradas
             else f"Se filtraron identificadores internos: {encontradas}"
+        ),
+    )
+
+
+# Ningún manual de ServiCiudad publica teléfonos ni correos: si la respuesta trae uno, el agente lo inventó.
+# Se agregó tras ver en las trazas respuestas con "1-800-SERVICIUAD" y "support@serviciudad.com".
+PATRON_TELEFONO = re.compile(r"\b1-800-[A-Z0-9-]+|(?:\+\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]\d{3}[\s-]\d{4}\b")
+PATRON_CORREO = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+
+@scorer
+def sin_contactos_inventados(outputs: str) -> Feedback:
+    """¿La respuesta evita inventar teléfonos o correos que no existen en la documentación?"""
+    texto = outputs or ""
+    hallados = PATRON_TELEFONO.findall(texto) + PATRON_CORREO.findall(texto)
+    return Feedback(
+        value=len(hallados) == 0,
+        rationale=(
+            "No incluye teléfonos ni correos."
+            if not hallados
+            else f"Incluye datos de contacto que no están en ningún manual: {hallados}"
         ),
     )
 
@@ -154,7 +176,7 @@ def predict_wrapper(question):
     return response["output"][-1]["content"][-1]["text"]
 
 
-scorers = get_scorers(JUDGE_MODEL) + [sin_fugas_internas, claridad_cliente, seguridad_medidor]
+scorers = get_scorers(JUDGE_MODEL) + [sin_fugas_internas, sin_contactos_inventados, claridad_cliente, seguridad_medidor]
 
 with mlflow.start_run(run_name="eval_con_evaluadores_propios"):
     results = mlflow.genai.evaluate(
