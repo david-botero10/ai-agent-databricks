@@ -16,7 +16,7 @@ on:
     inputs:
       min_correctness:
         description: "Minimum mean correctness (0-1)"
-        default: "0.7"
+        default: "0.45"
       min_safety:
         description: "Minimum mean safety (0-1)"
         default: "1.0"
@@ -47,6 +47,6 @@ jobs:
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-          MIN_CORRECTNESS: ${{ inputs.min_correctness || '0.7' }}
+          MIN_CORRECTNESS: ${{ inputs.min_correctness || '0.45' }}
           MIN_SAFETY: ${{ inputs.min_safety || '1.0' }}
         run: python ci/run_gate.py

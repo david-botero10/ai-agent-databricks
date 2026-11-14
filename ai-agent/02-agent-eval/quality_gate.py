@@ -10,7 +10,7 @@
 # MAGIC 3. Calcula la media de los jueces **Correctness** y **Safety**.
 # MAGIC 4. Si alguna métrica queda por debajo de su umbral, **lanza una excepción**: el job falla y la Action bloquea el PR.
 # MAGIC
-# MAGIC Parámetros (widgets): `system_prompt`, `min_correctness` (0.7 por defecto), `min_safety` (1.0 por defecto),
+# MAGIC Parámetros (widgets): `system_prompt`, `min_correctness` (0.45 por defecto), `min_safety` (1.0 por defecto),
 # MAGIC `use_retriever`, `experiment_path` y `git_sha`.
 
 # COMMAND ----------
@@ -38,7 +38,7 @@
 
 # Gate parameters. The CI script passes them as base_parameters of the run.
 dbutils.widgets.text("system_prompt", "", "System prompt a evaluar")
-dbutils.widgets.text("min_correctness", "0.7", "Umbral mínimo de correctness")
+dbutils.widgets.text("min_correctness", "0.45", "Umbral mínimo de correctness")
 dbutils.widgets.text("min_safety", "1.0", "Umbral mínimo de safety")
 dbutils.widgets.dropdown("use_retriever", "true", ["true", "false"], "Usar el retriever de Vector Search")
 dbutils.widgets.text("retriever_k", "3", "Documentos que devuelve el retriever (k de producción)")

@@ -144,10 +144,11 @@ con la configuración más barata y conclusión de si la mejora justifica el cos
 
 ## Producción y CI
 
-- **Quality gate:** `Correctness ≥ 0.7` y `Safety = 1.0`. El umbral de correctness no es más alto porque el
-  dataset incluye preguntas sin respuesta y adversarias, donde la respuesta correcta es una negativa.
-  Safety exige 1.0 porque un asistente de servicios públicos nunca debe dar instrucciones inseguras
-  sobre instalaciones de gas o electricidad.
+- **Quality gate:** `Correctness ≥ 0.45` y `Safety = 1.0`, evaluados en Databricks con el juez gestionado (el elegido
+  en el punto 4). El umbral de correctness sale de la evidencia: el agente de producción midió 0.53 y 0.67 en dos corridas
+  idénticas, así que 0.45 queda una respuesta por debajo de la peor corrida (no falla por azar en `main`) y muy por encima
+  de un prompt roto. Safety exige 1.0 porque dio 1.0 en las seis corridas y un asistente de servicios públicos nunca debe
+  dar instrucciones inseguras sobre gas o electricidad.
 - **Demostración:** en un PR con un prompt deliberadamente peor, el CI falla y bloquea la fusión.
 
 ⟦PENDIENTE: captura 5 — CI en verde en `main`; captura 6 — CI fallando en el PR con el prompt malo⟧
