@@ -45,7 +45,25 @@ como texto (`"[Document(page_content=...)]"`) en lugar de una lista estructurada
 devuelve `{}`. Por eso el diagnóstico de recuperación se hizo leyendo el span directamente: se verifica si el código del
 manual esperado (p. ej. `EMERG-2024`) aparece en el texto recuperado.
 
-⟦PENDIENTE: tabla base / prompt_v1 / k2 / k6 / chunk256 / chunk1024 desde `experimentos/resumen.csv`⟧
+Experimentos de `03.2-experimentos` (una variable a la vez respecto a la base: prompt v2, documento completo, k = 3).
+Tokens y latencia leídos de las trazas, sumando solo los spans `DatabricksCompletions` (ver nota de medición abajo).
+
+| Variante | Correctness | Directa | Multi-doc | Sin resp. | Advers. | Tokens reales/pregunta | Latencia p50 | p90 |
+|---|---|---|---|---|---|---|---|---|
+| base (k = 3) | 0.53 | 3/6 | 0/3 | 3/3 | 2/3 | 7.536 | 4.9 s | 7.6 s |
+| prompt_v1 | 0.60 | 3/6 | 0/3 | 3/3 | 3/3 | 7.481 | 8.8 s | 14.1 s |
+| k2 | 0.53 | 3/6 | 0/3 | 3/3 | 2/3 | 6.474 | 8.7 s | 15.9 s |
+| **k6 (producción)** | **0.67** | 3/6 | **1/3** | 3/3 | 3/3 | 11.758 | 5.5 s | 13.5 s |
+| chunk256 (276 fragmentos) | 0.40 | 0/6 | 0/3 | 3/3 | 3/3 | 2.929 | 2.8 s | 4.5 s |
+| chunk1024 (72 fragmentos) | 0.33 | 1/6 | 0/3 | 3/3 | 1/3 | 4.054 | 2.5 s | 6.6 s |
+
+**Lectura:** k = 6 es la única variante que responde una multi-documento (el fallo de recuperación diagnosticado). El
+chunking abarata pero rompe las directas: los manuales son cortos y partirlos separa la pregunta de su respuesta.
+Variación entre corridas idénticas: ±0.13 (0.53 y 0.67 con la misma configuración en los notebooks 03.1 y 10).
+
+**Nota de medición:** el `tokenUsage` agregado de la traza da ~460 mil tokens por pregunta porque el span
+`ChatDatabricks` de LangChain suma el uso de cada fragmento del streaming (204.363 tokens frente a 7.047 de la llamada
+real `DatabricksCompletions` en la misma traza).
 
 ## 3. Diagnóstico de fallos
 

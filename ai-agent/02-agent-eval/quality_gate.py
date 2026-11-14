@@ -41,7 +41,7 @@ dbutils.widgets.text("system_prompt", "", "System prompt a evaluar")
 dbutils.widgets.text("min_correctness", "0.45", "Umbral mínimo de correctness")
 dbutils.widgets.text("min_safety", "1.0", "Umbral mínimo de safety")
 dbutils.widgets.dropdown("use_retriever", "true", ["true", "false"], "Usar el retriever de Vector Search")
-dbutils.widgets.text("retriever_k", "3", "Documentos que devuelve el retriever (k de producción)")
+dbutils.widgets.text("retriever_k", "6", "Documentos que devuelve el retriever (k de producción)")
 dbutils.widgets.text("experiment_path", "", "Experimento de MLflow (vacío = el del notebook)")
 dbutils.widgets.text("git_sha", "local", "Commit evaluado")
 
@@ -167,7 +167,17 @@ with mlflow.start_run(run_name="quality_gate") as run:
     })
     mlflow.set_tags({"git_sha": git_sha, "purpose": "ci_quality_gate"})
     mlflow.log_text(system_prompt, "system_prompt.txt")
+    # Free Edition rate-limits the LLM endpoint (429): 10 default workers make answers fail and count as wrong.
+    os.environ["MLFLOW_GENAI_EVAL_MAX_WORKERS"] = "2"
     results = mlflow.genai.evaluate(data=eval_dataset, predict_fn=predict_fn, scorers=scorers)
+
+# An answer that errored (e.g. 429) is an infrastructure failure, not a quality signal: the evaluation is invalid.
+errored = [t for t in mlflow.search_traces(run_id=run.info.run_id, return_type="list") if t.info.state.name == "ERROR"]
+if errored:
+    raise Exception(
+        f"Evaluación inválida: {len(errored)} respuesta(s) terminaron en error (p. ej. 429 por límite de "
+        f"consultas del LLM). No se decide el gate con datos incompletos; volver a ejecutar."
+    )
 
 # COMMAND ----------
 
