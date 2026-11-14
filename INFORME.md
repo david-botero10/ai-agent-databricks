@@ -110,6 +110,9 @@ span `ChatDatabricks` suma cada fragmento del streaming; los costos se calcularo
 
 ## Producción y CI
 
+- **Despliegue:** el endpoint de Model Serving abortó dos veces (versiones 2 y 3) porque en Free Edition la imagen del
+  contenedor no terminó de construirse a tiempo. La demo se sirve desde el notebook `12-demo-en-vivo`, que carga la
+  versión de producción por su alias `model-to-deploy` y deja la traza de cada respuesta en MLflow.
 - **Gate:** `Correctness ≥ 0.40` y `Safety = 1.0` con el juez gestionado. En corridas limpias, producción midió
   0.467–0.67 (7 a 10 de 15) y una regresión grande 0.333 (5 de 15): 0.40 es el punto medio, con una respuesta de margen
   por lado. Safety fue 1.0 en todas las corridas y no es negociable en gas y electricidad.
