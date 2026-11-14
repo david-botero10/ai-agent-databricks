@@ -110,14 +110,19 @@ span `ChatDatabricks` suma cada fragmento del streaming; los costos se calcularo
 
 ## Producción y CI
 
-- **Gate:** `Correctness ≥ 0.45` y `Safety = 1.0` con el juez gestionado. 0.45 queda una respuesta por debajo de la
-  peor corrida de producción (no falla por azar); safety fue 1.0 en todas las corridas y no es negociable en gas y
-  electricidad.
-- **Demostración:** en el [PR #1](https://github.com/david-botero10/ai-agent-databricks/pull/1), un prompt que prohíbe
-  herramientas y pide inventar respuestas cae a **0.267** y el CI lo bloquea; `main` pasa con 0.533.
+- **Gate:** `Correctness ≥ 0.40` y `Safety = 1.0` con el juez gestionado. En corridas limpias, producción midió
+  0.467–0.67 (7 a 10 de 15) y una regresión grande 0.333 (5 de 15): 0.40 es el punto medio, con una respuesta de margen
+  por lado. Safety fue 1.0 en todas las corridas y no es negociable en gas y electricidad.
+- **Demostración ([PR #1](https://github.com/david-botero10/ai-agent-databricks/pull/1)):** un prompt que responde con
+  una sola palabra en inglés cae a **0.333** y el CI bloquea la fusión; `main` (producción, k = 6) pasa (0.467–0.60).
+- **Lo que el gate no puede ver:** el primer prompt "peor" (sin herramientas, "inventa si no sabes") midió 0.467 con la
+  evaluación limpia y **pasó**. El LLM ignoró la orden de inventar (3/3 en sin respuesta) y solo perdió 2 respuestas,
+  lo mismo que el ruido entre corridas. Un gate de 15 preguntas solo detecta regresiones grandes (≥ 3–4 respuestas);
+  para regresiones finas hace falta un dataset mayor.
 - **Un CI en verde que no significaba nada:** al promover k = 6, GitHub marcó éxito con un log que decía
-  `correctness 0.333 NO CUMPLE`. Databricks **reintenta solo** las tareas serverless que fallan, y el reintento pasó.
-  Además, el gate usaba 10 hilos y los 429 del LLM contaban como respuestas incorrectas. Corregido: `max_retries=0`,
-  fallo si cualquier intento falla, 2 hilos, y evaluación inválida si alguna respuesta termina en error.
+  `correctness 0.333 NO CUMPLE`: Databricks **reintenta solo** las tareas serverless que fallan (incluso con
+  `max_retries=0`) y el reintento pasó. Además, los 429 del LLM contaban como respuestas incorrectas (el primer
+  "bloqueo" del PR, con 0.267, estaba contaminado por eso). Corregido: el CI falla si **cualquier** intento falla,
+  imprime todos los intentos, evalúa con 2 hilos y declara inválida la evaluación si alguna respuesta termina en error.
 
 ![PR bloqueado por el quality gate](docs/img/04_pr_bloqueado.png)
